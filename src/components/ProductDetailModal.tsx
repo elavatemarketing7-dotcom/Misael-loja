@@ -75,24 +75,24 @@ export const ProductDetailModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
       <div 
-        className="relative w-full max-w-4xl bg-[#121318] border border-amber-500/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+        className="relative w-full max-w-4xl bg-[#121318] border border-amber-500/30 rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[96vh] sm:max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}
-        <div className="flex items-center justify-between px-6 py-3.5 border-b border-white/10 bg-[#161820]">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-2.5 sm:py-3.5 border-b border-white/10 bg-[#161820]">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-amber-400">
               {product.league}
             </span>
             <span className="text-slate-500">·</span>
-            <span className="text-[11px] text-slate-400">{product.season}</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-400">{product.season}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <button
               onClick={() => openProductEditor(product)}
-              className="text-xs text-amber-400 hover:text-amber-300 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 transition-colors flex items-center gap-1.5"
+              className="text-[11px] sm:text-xs text-amber-400 hover:text-amber-300 px-2 sm:px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 transition-colors flex items-center gap-1"
               title="Trocar a foto deste manto"
             >
               <Camera className="w-3.5 h-3.5" />
@@ -124,10 +124,10 @@ export const ProductDetailModal: React.FC = () => {
         </div>
 
         {/* Modal Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-6 flex-1">
+        <div className="p-3.5 sm:p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 flex-1">
           {/* Left Column: Image & Back Customization Preview */}
-          <div className="md:col-span-5 space-y-4">
-            <div className="relative aspect-[4/3] sm:aspect-square rounded-2xl overflow-hidden bg-[#181a22] border border-white/10 flex items-center justify-center group shadow-xl">
+          <div className="md:col-span-5 space-y-3 sm:space-y-4">
+            <div className="relative aspect-square sm:aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-[#181a22] border border-white/10 flex items-center justify-center group shadow-xl">
               {product.image ? (
                 <img
                   src={product.image}

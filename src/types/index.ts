@@ -42,6 +42,25 @@ export interface CartItem {
   unitPrice: number;
 }
 
+export interface ShippingOption {
+  id: 'pac' | 'sedex';
+  name: string;
+  service: string;
+  price: number;
+  originalPrice?: number;
+  deadline: string;
+  isFree?: boolean;
+  description: string;
+}
+
+export interface ShippingAddressInfo {
+  cep: string;
+  logradouro?: string;
+  bairro?: string;
+  localidade?: string;
+  uf?: string;
+}
+
 export interface CustomerOrder {
   customerName: string;
   customerPhone: string;
@@ -56,5 +75,6 @@ export interface CustomerOrder {
   subtotal: number;
   discount: number;
   shipping: number;
+  shippingOption?: ShippingOption;
   total: number;
 }

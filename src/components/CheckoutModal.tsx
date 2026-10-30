@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   QrCode, 
@@ -10,7 +10,10 @@ import {
   Truck, 
   Lock,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Zap,
+  Loader2,
+  MapPin
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { calculateInstallments } from '../utils/installments';
@@ -22,7 +25,15 @@ export const CheckoutModal: React.FC = () => {
     cart,
     cartTotal,
     clearCart,
-    showToast
+    showToast,
+    calculatedCep,
+    shippingOptions,
+    selectedShippingOption,
+    setSelectedShippingOption,
+    shippingDestination,
+    shippingAddress,
+    isCalculatingShipping,
+    calculateShipping
   } = useShop();
 
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'credit_card'>('pix');
@@ -33,13 +44,37 @@ export const CheckoutModal: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [cpf, setCpf] = useState('');
-  const [cep, setCep] = useState('');
+  const [cep, setCep] = useState(calculatedCep || '');
   const [street, setStreet] = useState('');
   const [number, setNumber] = useState('');
   const [complement, setComplement] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('SP');
+
+  // Sync address if already resolved in context
+  useEffect(() => {
+    if (calculatedCep && !cep) {
+      setCep(calculatedCep);
+    }
+  }, [calculatedCep, cep]);
+
+  useEffect(() => {
+    if (shippingAddress) {
+      if (shippingAddress.logradouro) setStreet(shippingAddress.logradouro);
+      if (shippingAddress.bairro) setNeighborhood(shippingAddress.bairro);
+      if (shippingAddress.localidade) setCity(shippingAddress.localidade);
+      if (shippingAddress.uf) setState(shippingAddress.uf);
+    }
+  }, [shippingAddress]);
+
+  const handleCepChange = (val: string) => {
+    setCep(val);
+    const clean = val.replace(/\D/g, '');
+    if (clean.length === 8) {
+      calculateShipping(clean);
+    }
+  };
 
   // Credit card fields
   const [cardNumber, setCardNumber] = useState('');
@@ -95,11 +130,18 @@ export const CheckoutModal: React.FC = () => {
         ? `Cartão de Crédito (${currentInstallment.number}x de R$ ${currentInstallment.installmentValue.toFixed(2)} - com juros da maquininha, Total: R$ ${finalCardTotal.toFixed(2)})`
         : `Cartão de Crédito (${currentInstallment.number}x de R$ ${currentInstallment.installmentValue.toFixed(2)} sem juros)`;
 
+    const shippingDetail = selectedShippingOption
+      ? `${selectedShippingOption.service} (${selectedShippingOption.deadline}) - ${
+          selectedShippingOption.price === 0 ? 'GRÁTIS' : `R$ ${selectedShippingOption.price.toFixed(2)}`
+        }`
+      : 'Frete Correios a calcular';
+
     const orderMsg = encodeURIComponent(
       `🦁 *NOVO PEDIDO CONFIRMADO - MN STORE*\n\n` +
       `*Cliente:* ${fullName}\n` +
       `*WhatsApp:* ${phone}\n` +
-      `*Endereço:* ${street}, nº ${number} ${complement ? `(${complement})` : ''} - ${neighborhood}, ${city}/${state} - CEP: ${cep}\n\n` +
+      `*Endereço:* ${street}, nº ${number} ${complement ? `(${complement})` : ''} - ${neighborhood}, ${city}/${state} - CEP: ${cep}\n` +
+      `*Modalidade de Envio:* ${shippingDetail}\n\n` +
       `*Mantos Escolhidos (Promoção R$ 120):*\n${itemsText}\n\n` +
       `*Forma de Pagamento:* ${paymentDetail}\n` +
       `*Total do Pedido:* R$ ${finalOrderTotal.toFixed(2)}\n\n` +
@@ -110,22 +152,22 @@ export const CheckoutModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
       <div 
-        className="relative w-full max-w-3xl bg-[#121318] border border-amber-500/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+        className="relative w-full max-w-3xl bg-[#121318] border border-amber-500/30 rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[96vh] sm:max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#161820]">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 bg-[#161820]">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="p-1 sm:p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
               <Lock className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-display font-black text-lg text-white uppercase tracking-wider">
+              <h3 className="font-display font-black text-base sm:text-lg text-white uppercase tracking-wider">
                 Checkout Seguro · MN Store
               </h3>
-              <p className="text-[11px] text-slate-400">Ambiente criptografado SSL 256 bits</p>
+              <p className="text-[10px] sm:text-[11px] text-slate-400">Ambiente criptografado SSL 256 bits</p>
             </div>
           </div>
           <button
@@ -133,14 +175,14 @@ export const CheckoutModal: React.FC = () => {
               if (orderPlaced) clearCart();
               setIsCheckoutOpen(false);
             }}
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+            className="p-1.5 sm:p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1">
+        <div className="p-3.5 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6 flex-1">
           {orderPlaced ? (
             /* Order Success View */
             <div className="text-center py-6 space-y-6 animate-in zoom-in-95 duration-200">
@@ -264,13 +306,18 @@ export const CheckoutModal: React.FC = () => {
               {/* Order summary pill */}
               <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-wrap items-center justify-between gap-2 text-xs">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
                   <span className="text-slate-200">
-                    Você está garantindo <strong className="text-white">{cart.length} manto(s)</strong> na promoção <strong>De R$ 180 por R$ 120</strong>!
+                    Garantindo <strong className="text-white">{cart.length} manto(s)</strong> na promoção <strong>R$ 120 cada</strong>!
+                    {selectedShippingOption && (
+                      <span className="ml-1 text-slate-400">
+                        · Frete: <strong className="text-amber-300">{selectedShippingOption.service} ({selectedShippingOption.price === 0 ? 'GRÁTIS' : `R$ ${selectedShippingOption.price.toFixed(2)}`})</strong>
+                      </span>
+                    )}
                   </span>
                 </div>
                 <span className="font-mono font-bold text-amber-400 text-sm">
-                  Total: R$ {paymentMethod === 'pix' ? pixTotal.toFixed(2) : cartTotal.toFixed(2)}
+                  Total: R$ {finalOrderTotal.toFixed(2)}
                 </span>
               </div>
 
@@ -305,25 +352,45 @@ export const CheckoutModal: React.FC = () => {
                 </div>
               </div>
 
-              {/* 2. Delivery Address */}
+              {/* 2. Delivery Address & Correios Shipping */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5 font-display">
-                  <span>2.</span> Endereço de Entrega (Correios)
-                </h4>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5 font-display">
+                    <Truck className="w-4 h-4 text-amber-400" />
+                    <span>2.</span> Endereço de Entrega & Frete Correios
+                  </h4>
+                  {shippingDestination && (
+                    <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-semibold">
+                      <MapPin className="w-3.5 h-3.5" />
+                      {shippingDestination}
+                    </span>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[11px] text-slate-300 font-semibold">CEP *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="00000-000"
-                      value={cep}
-                      onChange={(e) => setCep(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl bg-[#181a24] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-500"
-                    />
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] text-slate-300 font-semibold">CEP *</label>
+                      {isCalculatingShipping && (
+                        <span className="text-[10px] text-amber-400 flex items-center gap-1">
+                          <Loader2 className="w-3 h-3 animate-spin" /> Buscando...
+                        </span>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        required
+                        maxLength={9}
+                        placeholder="00000-000"
+                        value={cep}
+                        onChange={(e) => handleCepChange(e.target.value)}
+                        className="w-full px-3.5 py-2 rounded-xl bg-[#181a24] border border-white/10 text-white text-xs font-mono focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
                   </div>
                   <div className="col-span-2 sm:col-span-3 space-y-1">
-                    <label className="text-[11px] text-slate-300 font-semibold">Rua / Avenida *</label>
+                    <label className="text-[11px] text-slate-300 font-semibold">Rua / Logradouro *</label>
                     <input
                       type="text"
                       required
@@ -348,7 +415,7 @@ export const CheckoutModal: React.FC = () => {
                     <label className="text-[11px] text-slate-300 font-semibold">Complemento</label>
                     <input
                       type="text"
-                      placeholder="Apto 42"
+                      placeholder="Apto 42, Bloco B"
                       value={complement}
                       onChange={(e) => setComplement(e.target.value)}
                       className="w-full px-3.5 py-2 rounded-xl bg-[#181a24] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-500"
@@ -369,12 +436,98 @@ export const CheckoutModal: React.FC = () => {
                     <input
                       type="text"
                       placeholder="São Paulo / SP"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
+                      value={city ? `${city} - ${state}` : ''}
+                      onChange={(e) => {
+                        const parts = e.target.value.split('-');
+                        setCity(parts[0]?.trim() || e.target.value);
+                        if (parts[1]) setState(parts[1].trim());
+                      }}
                       className="w-full px-3.5 py-2 rounded-xl bg-[#181a24] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-500"
                     />
                   </div>
                 </div>
+
+                {/* Correios Shipping Options in Checkout */}
+                {shippingOptions.length > 0 && (
+                  <div className="pt-2">
+                    <label className="text-[11px] text-slate-300 font-semibold block mb-1.5">
+                      Selecione a Modalidade dos Correios:
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {shippingOptions.map((opt) => {
+                        const isSelected = selectedShippingOption?.id === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setSelectedShippingOption(opt)}
+                            className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
+                              isSelected
+                                ? 'bg-amber-500/15 border-amber-500 text-white shadow-md shadow-amber-500/10'
+                                : 'bg-[#181a24] border-white/10 text-slate-300 hover:border-white/30'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div
+                                className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                  isSelected ? 'border-amber-400 bg-amber-400' : 'border-slate-500'
+                                }`}
+                              >
+                                {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
+                              </div>
+
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-bold text-xs uppercase font-display text-white">
+                                    {opt.id === 'sedex' ? 'SEDEX' : 'PAC'} Correios
+                                  </span>
+                                  {opt.id === 'sedex' ? (
+                                    <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 text-[9px] font-bold uppercase flex items-center gap-0.5">
+                                      <Zap className="w-2.5 h-2.5" /> Expresso
+                                    </span>
+                                  ) : (
+                                    <span className="px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 text-[9px] font-bold uppercase">
+                                      Econômico
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-slate-400 block mt-0.5">
+                                  {opt.deadline}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              {opt.price === 0 ? (
+                                <div>
+                                  {opt.originalPrice && (
+                                    <span className="text-[10px] text-slate-500 line-through block">
+                                      R$ {opt.originalPrice.toFixed(2)}
+                                    </span>
+                                  )}
+                                  <span className="text-xs font-bold text-emerald-400 uppercase font-mono">
+                                    GRÁTIS
+                                  </span>
+                                </div>
+                              ) : (
+                                <div>
+                                  {opt.originalPrice && opt.originalPrice > opt.price && (
+                                    <span className="text-[10px] text-slate-500 line-through block">
+                                      R$ {opt.originalPrice.toFixed(2)}
+                                    </span>
+                                  )}
+                                  <span className="text-xs font-bold text-white font-mono">
+                                    R$ {opt.price.toFixed(2)}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 3. Payment Method */}

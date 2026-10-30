@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Product, CartItem, JerseyCategory, JerseySize, JerseyVersion, CustomizationOption } from '../types';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { Product, CartItem, JerseyCategory, JerseySize, JerseyVersion, CustomizationOption, ShippingOption, ShippingAddressInfo } from '../types';
 import { INITIAL_PRODUCTS } from '../data/products';
+import { calculateCorreios } from '../utils/correios';
 
 interface ShopContextType {
   products: Product[];
@@ -25,7 +26,13 @@ interface ShopContextType {
   freeShippingRemaining: number;
   shippingCost: number;
   calculatedCep: string;
-  calculateShipping: (cep: string) => void;
+  shippingOptions: ShippingOption[];
+  selectedShippingOption: ShippingOption | null;
+  setSelectedShippingOption: (option: ShippingOption) => void;
+  shippingDestination: string;
+  shippingAddress: ShippingAddressInfo | null;
+  isCalculatingShipping: boolean;
+  calculateShipping: (cep: string) => Promise<void>;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
   isCheckoutOpen: boolean;
@@ -112,9 +119,13 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [selectedSizeFilter, setSelectedSizeFilter] = useState<JerseySize | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Checkout & Shipping state
-  const [shippingCost, setShippingCost] = useState<number>(0);
+  // Checkout & Shipping state (Correios PAC & SEDEX)
   const [calculatedCep, setCalculatedCep] = useState<string>('');
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
+  const [selectedShippingOption, setSelectedShippingOption] = useState<ShippingOption | null>(null);
+  const [shippingDestination, setShippingDestination] = useState<string>('');
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddressInfo | null>(null);
+  const [isCalculatingShipping, setIsCalculatingShipping] = useState<boolean>(false);
 
   useEffect(() => {
     try {
@@ -251,22 +262,69 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const freeShippingQualified = cartItemCount >= 2;
   const freeShippingRemaining = Math.max(0, 2 - cartItemCount);
 
-  // Shipping calculation
-  const calculateShipping = (cep: string) => {
-    const clean = cep.replace(/\D/g, '');
-    setCalculatedCep(clean);
-    if (clean.length === 8) {
-      if (freeShippingQualified) {
-        setShippingCost(0);
-        showToast('Parabéns! Seu pedido se qualificou para FRETE GRÁTIS!');
-      } else {
-        setShippingCost(14.9);
-        showToast('Frete calculado com sucesso via Correios!');
+  // Shipping calculation via Correios (PAC and SEDEX)
+  const calculateShipping = useCallback(
+    async (cep: string) => {
+      const clean = cep.replace(/\D/g, '');
+      if (clean.length !== 8) {
+        showToast('Digite um CEP válido com 8 dígitos.');
+        return;
       }
-    }
-  };
 
-  const effectiveShipping = freeShippingQualified ? 0 : shippingCost;
+      setCalculatedCep(clean);
+      setIsCalculatingShipping(true);
+
+      try {
+        const result = await calculateCorreios(clean, freeShippingQualified);
+        setShippingOptions(result.options);
+        setShippingDestination(result.destination);
+        if (result.address) {
+          setShippingAddress(result.address);
+        }
+
+        // Keep current selected method if valid, or default to PAC
+        setSelectedShippingOption((prev) => {
+          if (prev) {
+            const match = result.options.find((o) => o.id === prev.id);
+            if (match) return match;
+          }
+          return result.options[0] || null;
+        });
+
+        if (freeShippingQualified) {
+          showToast(`Correios para ${result.destination}: PAC Grátis ativado!`);
+        } else {
+          showToast(`Correios para ${result.destination}: PAC e SEDEX disponíveis!`);
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Erro ao calcular frete dos Correios';
+        showToast(msg);
+      } finally {
+        setIsCalculatingShipping(false);
+      }
+    },
+    [freeShippingQualified, showToast]
+  );
+
+  // Recalculate rates when cart qualification changes (e.g. from 1 item to 2 items)
+  useEffect(() => {
+    if (calculatedCep && calculatedCep.length === 8) {
+      calculateCorreios(calculatedCep, freeShippingQualified)
+        .then((result) => {
+          setShippingOptions(result.options);
+          setSelectedShippingOption((prev) => {
+            const idToKeep = prev ? prev.id : 'pac';
+            const matched = result.options.find((o) => o.id === idToKeep);
+            return matched || result.options[0] || null;
+          });
+        })
+        .catch(() => {
+          // ignore background update error
+        });
+    }
+  }, [freeShippingQualified, calculatedCep]);
+
+  const effectiveShipping = selectedShippingOption ? selectedShippingOption.price : 0;
   const cartTotal = Math.max(0, cartSubtotal + effectiveShipping);
 
   const toggleWishlist = (productId: string) => {
@@ -346,6 +404,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         freeShippingRemaining,
         shippingCost: effectiveShipping,
         calculatedCep,
+        shippingOptions,
+        selectedShippingOption,
+        setSelectedShippingOption,
+        shippingDestination,
+        shippingAddress,
+        isCalculatingShipping,
         calculateShipping,
         isCartOpen,
         setIsCartOpen,

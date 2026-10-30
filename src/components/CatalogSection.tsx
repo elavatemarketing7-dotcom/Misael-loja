@@ -74,26 +74,26 @@ export const CatalogSection: React.FC = () => {
   }, [products, activeCategory, searchQuery, selectedSizeFilter, sortBy]);
 
   return (
-    <section id="catalogo-de-mantos" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+    <section id="catalogo-de-mantos" className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-12 space-y-5 sm:space-y-8">
       {/* 1. Header & Scarcity Kicker */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-6">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <span className="text-xs uppercase tracking-widest text-amber-400 font-bold font-display">
-              Catálogo de Futebol 2024 / 2025
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4 border-b border-white/10 pb-4 sm:pb-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <span className="text-[10px] sm:text-xs uppercase tracking-widest text-amber-400 font-bold font-display">
+              Catálogo Oficial 2024 / 2025
             </span>
             <span className="text-slate-500">·</span>
-            <span className="text-xs text-rose-400 font-semibold flex items-center gap-1">
+            <span className="text-[11px] sm:text-xs text-rose-400 font-semibold flex items-center gap-1">
               <Flame className="w-3.5 h-3.5" />
               Preço único: De R$ 180 por R$ 120
             </span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase text-white font-display tracking-wide">
+          <h2 className="text-xl sm:text-3xl lg:text-4xl font-black uppercase text-white font-display tracking-wide">
             ESCOLHA SEU MANTO SAGRADO
           </h2>
 
-          <p className="text-xs text-slate-400 max-w-xl">
+          <p className="text-[11px] sm:text-xs text-slate-400 max-w-xl">
             Todos os modelos confeccionados em tecido tecnológico dry-fit. Selecione seu clube favorito e personalize com seu nome e número.
           </p>
         </div>
@@ -101,22 +101,22 @@ export const CatalogSection: React.FC = () => {
         {/* Lojista Quick Edit trigger with authentication */}
         <button
           onClick={() => openProductEditor()}
-          className="px-4 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold uppercase tracking-wider flex items-center gap-2 self-start md:self-auto transition-colors"
+          className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 self-start md:self-auto transition-colors active:scale-95"
           title={isLojistaAuthenticated ? 'Painel conectado como mnstore' : 'Acesso Restrito: Painel do Lojista'}
         >
           {isLojistaAuthenticated ? (
-            <UserCheck className="w-4 h-4 text-emerald-400" />
+            <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
           ) : (
-            <Lock className="w-4 h-4 text-amber-400" />
+            <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
           )}
           <span>{isLojistaAuthenticated ? 'Trocar Fotos (mnstore)' : 'Trocar Fotos dos Mantos'}</span>
         </button>
       </div>
 
       {/* 2. Filter Bar: Categories + Size Filter + Sort */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {/* Category Tabs (Segmented Buttons) */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+        <div className="-mx-3 px-3 sm:mx-0 sm:px-0 flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1.5 sm:pb-2 scrollbar-none">
           {categories.map((cat) => {
             const isActive = activeCategory === cat.id && !searchQuery;
             return (
@@ -127,7 +127,7 @@ export const CatalogSection: React.FC = () => {
                   setActiveCategory(cat.id);
                   setSearchQuery('');
                 }}
-                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border ${
+                className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border ${
                   isActive
                     ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/20'
                     : 'bg-[#151720] text-slate-300 border-white/10 hover:border-amber-400/40 hover:text-white'
@@ -140,17 +140,17 @@ export const CatalogSection: React.FC = () => {
         </div>
 
         {/* Secondary Filter Row: Sizes + Sorting + Results Count */}
-        <div className="flex flex-wrap items-center justify-between gap-4 p-3.5 rounded-2xl bg-[#121319] border border-white/10">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-[#121319] border border-white/10">
           {/* Sizes */}
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400">
-              Filtrar Tamanho:
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+            <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold text-slate-400 shrink-0">
+              Tamanho:
             </span>
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => setSelectedSizeFilter(null)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-colors ${
+                className={`px-2 py-1 rounded-lg text-[11px] sm:text-xs font-mono font-bold transition-colors ${
                   selectedSizeFilter === null
                     ? 'bg-amber-500 text-black'
                     : 'bg-white/5 text-slate-400 hover:text-white'
@@ -165,7 +165,7 @@ export const CatalogSection: React.FC = () => {
                   onClick={() =>
                     setSelectedSizeFilter(selectedSizeFilter === size ? null : size)
                   }
-                  className={`w-7 h-7 rounded-lg text-xs font-mono font-bold transition-colors ${
+                  className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[11px] sm:text-xs font-mono font-bold transition-colors ${
                     selectedSizeFilter === size
                       ? 'bg-amber-500 text-black'
                       : 'bg-white/5 text-slate-400 hover:text-white'
@@ -178,17 +178,17 @@ export const CatalogSection: React.FC = () => {
           </div>
 
           {/* Sort By */}
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400">
+          <div className="flex items-center justify-between sm:justify-end gap-2">
+            <span className="text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold text-slate-400 shrink-0">
               Ordenar por:
             </span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-1.5 rounded-xl bg-[#1a1c26] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-500"
+              className="flex-1 sm:flex-initial px-2.5 py-1.5 rounded-lg sm:rounded-xl bg-[#1a1c26] border border-white/10 text-white text-xs focus:outline-none focus:border-amber-500"
             >
-              <option value="popular">Mais Populares / Mais Vendidos</option>
-              <option value="stock">Menor Estoque (Urgência)</option>
+              <option value="popular">Mais Populares</option>
+              <option value="stock">Menor Estoque</option>
               <option value="name">Nome do Time (A-Z)</option>
             </select>
           </div>
@@ -196,28 +196,28 @@ export const CatalogSection: React.FC = () => {
 
         {/* Search indicator */}
         {searchQuery && (
-          <div className="flex items-center justify-between text-xs text-slate-300 bg-white/5 p-3 rounded-xl border border-white/10">
-            <span>
-              Exibindo resultados para busca: <strong className="text-amber-400">"{searchQuery}"</strong> ({filteredProducts.length} mantos encontrados)
+          <div className="flex items-center justify-between text-xs text-slate-300 bg-white/5 p-2.5 sm:p-3 rounded-xl border border-white/10">
+            <span className="truncate">
+              Resultados para: <strong className="text-amber-400">"{searchQuery}"</strong> ({filteredProducts.length})
             </span>
             <button
               onClick={() => setSearchQuery('')}
-              className="text-amber-400 hover:underline flex items-center gap-1"
+              className="text-amber-400 hover:underline flex items-center gap-1 shrink-0 ml-2"
             >
               <RotateCcw className="w-3 h-3" />
-              Limpar busca
+              Limpar
             </button>
           </div>
         )}
       </div>
 
-      {/* 3. Product Grid */}
+      {/* 3. Product Grid: 2 columns on mobile, 4 columns on large */}
       {filteredProducts.length === 0 ? (
-        <div className="py-16 text-center space-y-4 rounded-2xl bg-[#14151e] border border-white/10 p-8">
-          <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-amber-400">
-            <Filter className="w-8 h-8" />
+        <div className="py-12 sm:py-16 text-center space-y-4 rounded-xl sm:rounded-2xl bg-[#14151e] border border-white/10 p-6 sm:p-8">
+          <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-amber-400">
+            <Filter className="w-7 h-7" />
           </div>
-          <h3 className="text-xl font-bold text-white font-display uppercase">
+          <h3 className="text-lg sm:text-xl font-bold text-white font-display uppercase">
             Nenhum manto encontrado
           </h3>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
@@ -229,14 +229,14 @@ export const CatalogSection: React.FC = () => {
               setSelectedSizeFilter(null);
               setSearchQuery('');
             }}
-            className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase tracking-wider transition-colors inline-flex items-center gap-2"
+            className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase tracking-wider transition-colors inline-flex items-center gap-2"
           >
             <RotateCcw className="w-4 h-4" />
             Ver Todos os Mantos
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-6">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

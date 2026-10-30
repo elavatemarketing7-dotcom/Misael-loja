@@ -17,6 +17,7 @@ import { ProductEditorModal } from './components/ProductEditorModal';
 import { LojistaLoginModal } from './components/LojistaLoginModal';
 import { SizeGuideModal } from './components/SizeGuideModal';
 import { WhatsAppButton } from './components/WhatsAppButton';
+import { MobileBottomBar } from './components/MobileBottomBar';
 import { Check } from 'lucide-react';
 
 const ToastNotification: React.FC = () => {
@@ -24,10 +25,10 @@ const ToastNotification: React.FC = () => {
   if (!toastMessage) return null;
 
   return (
-    <div className="fixed top-22 right-4 z-50 animate-in slide-in-from-top-3 duration-200">
-      <div className="px-4 py-2.5 rounded-xl bg-amber-500 text-black font-bold text-xs uppercase tracking-wider shadow-2xl flex items-center gap-2 border border-amber-300">
-        <Check className="w-4 h-4" />
-        <span>{toastMessage}</span>
+    <div className="fixed top-20 sm:top-22 right-3 sm:right-4 z-50 animate-in slide-in-from-top-3 duration-200 max-w-[calc(100vw-1.5rem)]">
+      <div className="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-amber-500 text-black font-bold text-xs uppercase tracking-wider shadow-2xl flex items-center gap-2 border border-amber-300">
+        <Check className="w-4 h-4 shrink-0" />
+        <span className="truncate">{toastMessage}</span>
       </div>
     </div>
   );
@@ -35,7 +36,7 @@ const ToastNotification: React.FC = () => {
 
 function MainLayout() {
   return (
-    <div className="min-h-screen bg-[#0b0c0e] text-slate-100 flex flex-col selection:bg-amber-500 selection:text-black">
+    <div className="min-h-screen bg-[#0b0c0e] text-slate-100 flex flex-col selection:bg-amber-500 selection:text-black overflow-x-hidden w-full max-w-full pb-16 sm:pb-0">
       {/* Toast Alert */}
       <ToastNotification />
 
@@ -46,7 +47,7 @@ function MainLayout() {
       <HeroBanner />
 
       {/* 2. Em Baixo: Já o Catálogo de Mantos */}
-      <main className="flex-1">
+      <main className="flex-1 w-full max-w-full overflow-x-hidden">
         <CatalogSection />
       </main>
 
@@ -55,6 +56,9 @@ function MainLayout() {
 
       {/* Footer */}
       <Footer />
+
+      {/* Mobile Quick Bottom Navigation */}
+      <MobileBottomBar />
 
       {/* Modals & Overlays */}
       <ProductDetailModal />

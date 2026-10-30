@@ -19,44 +19,44 @@ export const StoreGuaranteesSection: React.FC = () => {
   const { setIsSizeGuideOpen } = useShop();
 
   return (
-    <section className="bg-[#0e0f14] border-t border-white/10 py-16 px-4 sm:px-6 relative overflow-hidden">
+    <section className="bg-[#0e0f14] border-t border-white/10 py-10 sm:py-16 px-3 sm:px-6 relative overflow-hidden max-w-full">
       {/* Background ambient glows */}
       <div className="absolute top-1/2 left-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-10 w-96 h-96 bg-amber-600/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto space-y-16 relative z-10">
+      <div className="max-w-7xl mx-auto space-y-10 sm:space-y-16 relative z-10">
         {/* 1. The 4 Main Benefit Cards */}
         <div>
-          <div className="text-center mb-10 space-y-2">
-            <span className="text-xs uppercase tracking-widest text-amber-400 font-bold">
+          <div className="text-center mb-6 sm:mb-10 space-y-1.5 sm:space-y-2">
+            <span className="text-[10px] sm:text-xs uppercase tracking-widest text-amber-400 font-bold">
               Vantagens Exclusivas MN Store
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black uppercase text-white font-display">
+            <h2 className="text-xl sm:text-3xl font-black uppercase text-white font-display">
               Por que comprar seu manto na <span className="text-gold-gradient">MN Store</span>?
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
             {/* Card 1: Preço & Escassez */}
-            <div className="p-6 rounded-2xl bg-[#14151e] border border-amber-500/30 hover:border-amber-500/60 transition-all shadow-xl group">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4 group-hover:scale-110 transition-transform">
-                <Flame className="w-6 h-6 fill-amber-400/20" />
+            <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-[#14151e] border border-amber-500/30 hover:border-amber-500/60 transition-all shadow-xl group">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
+                <Flame className="w-5 h-5 sm:w-6 sm:h-6 fill-amber-400/20" />
               </div>
-              <span className="px-2 py-0.5 rounded bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider mb-2 inline-block">
+              <span className="px-2 py-0.5 rounded bg-rose-600 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider mb-2 inline-block">
                 Economize R$ 60
               </span>
-              <h3 className="text-lg font-bold text-white uppercase font-display">
+              <h3 className="text-base sm:text-lg font-bold text-white uppercase font-display">
                 De R$ 180 por R$ 120
               </h3>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+              <p className="text-xs text-slate-400 mt-1.5 sm:mt-2 leading-relaxed">
                 Preço promocional direto de lote. O melhor custo-benefício em mantos com qualidade tailandesa 1:1 do Brasil.
               </p>
             </div>
 
             {/* Card 2: Frete Grátis */}
-            <div className="p-6 rounded-2xl bg-[#14151e] border border-white/10 hover:border-amber-500/40 transition-all shadow-xl group">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4 group-hover:scale-110 transition-transform">
-                <Truck className="w-6 h-6" />
+            <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-[#14151e] border border-white/10 hover:border-amber-500/40 transition-all shadow-xl group">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
+                <Truck className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase tracking-wider mb-2 inline-block">
                 Todo o Brasil

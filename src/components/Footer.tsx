@@ -6,9 +6,9 @@ export const Footer: React.FC = () => {
   const { setActiveCategory, setIsSizeGuideOpen, openProductEditor } = useShop();
 
   return (
-    <footer className="bg-[#08090b] border-t border-white/10 text-slate-400 text-xs">
+    <footer className="bg-[#08090b] border-t border-white/10 text-slate-400 text-xs w-full max-w-full overflow-x-hidden">
       {/* 1. Main Footer Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-8 sm:py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
         {/* Brand Column */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">

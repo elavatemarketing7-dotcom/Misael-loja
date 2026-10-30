@@ -8,7 +8,10 @@ import {
   ShieldCheck, 
   Check, 
   MessageCircle,
-  Sparkles
+  Sparkles,
+  Zap,
+  MapPin,
+  Loader2
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 
@@ -25,6 +28,11 @@ export const CartDrawer: React.FC = () => {
     freeShippingRemaining,
     shippingCost,
     calculatedCep,
+    shippingOptions,
+    selectedShippingOption,
+    setSelectedShippingOption,
+    shippingDestination,
+    isCalculatingShipping,
     calculateShipping,
     setIsCheckoutOpen
   } = useShop();
@@ -35,7 +43,9 @@ export const CartDrawer: React.FC = () => {
 
   const handleCalcShipping = (e: React.FormEvent) => {
     e.preventDefault();
-    calculateShipping(cepInput);
+    if (cepInput.trim()) {
+      calculateShipping(cepInput);
+    }
   };
 
   const handleGoToCheckout = () => {
@@ -55,10 +65,20 @@ export const CartDrawer: React.FC = () => {
       )
       .join('\n');
 
+    const shippingLine = selectedShippingOption
+      ? `*Frete Correios:* ${selectedShippingOption.service} (${selectedShippingOption.deadline}) - ${
+          selectedShippingOption.price === 0 ? 'GRÁTIS' : `R$ ${selectedShippingOption.price.toFixed(2)}`
+        }`
+      : `*Frete:* A calcular via Correios`;
+
     const message = encodeURIComponent(
-      `🦁 *NOVO PEDIDO - MN STORE*\n\nOlá MN Store! Gostaria de fechar meu pedido das camisas de time na promoção (De R$ 180 por R$ 120):\n\n${itemsText}\n\n*Total a pagar:* R$ ${cartTotal.toFixed(
-        2
-      )}\n*Forma de pagamento:* PIX / Cartão\n\nPor favor, confirmem a disponibilidade dos meus mantos!`
+      `🦁 *NOVO PEDIDO - MN STORE*\n\n` +
+      `Olá MN Store! Gostaria de fechar meu pedido das camisas de time na promoção (De R$ 180 por R$ 120):\n\n` +
+      `${itemsText}\n\n` +
+      `${shippingLine}\n` +
+      `*Total a pagar:* R$ ${cartTotal.toFixed(2)}\n` +
+      `*Forma de pagamento:* PIX / Cartão\n\n` +
+      `Por favor, confirmem a disponibilidade dos meus mantos e o envio do código de rastreamento!`
     );
 
     window.open(`https://wa.me/5511999999999?text=${message}`, '_blank');
@@ -69,22 +89,22 @@ export const CartDrawer: React.FC = () => {
   const totalEconomy = originalTotal - promoSubtotal;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-black/85 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="absolute inset-0" onClick={() => setIsCartOpen(false)} />
 
-      <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-[#111216] border-l border-amber-500/30 flex flex-col shadow-2xl">
+      <div className="absolute inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10 w-full sm:w-auto">
+        <div className="w-full sm:w-screen sm:max-w-md bg-[#111216] border-l border-amber-500/30 flex flex-col shadow-2xl h-full">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#151720]">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/10 bg-[#151720]">
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-amber-400" />
-              <h3 className="font-display font-black text-lg text-white uppercase tracking-wider">
+              <h3 className="font-display font-black text-base sm:text-lg text-white uppercase tracking-wider">
                 Sua Sacola de Mantos ({cartItemCount})
               </h3>
             </div>
             <button
               onClick={() => setIsCartOpen(false)}
-              className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -247,23 +267,128 @@ export const CartDrawer: React.FC = () => {
           {/* Footer & Checkout Area */}
           {cart.length > 0 && (
             <div className="p-4 border-t border-white/10 bg-[#151720] space-y-3">
-              {/* CEP Shipping calculator */}
-              <form onSubmit={handleCalcShipping} className="flex gap-2">
-                <input
-                  type="text"
-                  maxLength={9}
-                  placeholder="Seu CEP (00000-000)"
-                  value={cepInput}
-                  onChange={(e) => setCepInput(e.target.value)}
-                  className="flex-1 px-3 py-2 rounded-xl bg-[#1a1c26] border border-white/10 text-white placeholder-slate-500 text-xs font-mono focus:outline-none focus:border-amber-500"
-                />
-                <button
-                  type="submit"
-                  className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors"
-                >
-                  Calcular
-                </button>
-              </form>
+              {/* CEP Correios Shipping Calculator */}
+              <div className="space-y-2 p-3 rounded-xl bg-[#181a24] border border-white/10">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-white uppercase tracking-wider flex items-center gap-1.5 font-display">
+                    <Truck className="w-4 h-4 text-amber-400" />
+                    Frete Correios (PAC e SEDEX)
+                  </span>
+                  {shippingDestination && (
+                    <span className="text-[11px] text-amber-400 flex items-center gap-1 font-semibold truncate max-w-[160px]">
+                      <MapPin className="w-3 h-3 shrink-0" />
+                      {shippingDestination}
+                    </span>
+                  )}
+                </div>
+
+                <form onSubmit={handleCalcShipping} className="flex gap-2">
+                  <input
+                    type="text"
+                    maxLength={9}
+                    placeholder="Seu CEP (00000-000)"
+                    value={cepInput}
+                    onChange={(e) => setCepInput(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-xl bg-[#111216] border border-white/10 text-white placeholder-slate-500 text-xs font-mono focus:outline-none focus:border-amber-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isCalculatingShipping}
+                    className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black text-xs font-extrabold uppercase tracking-wider transition-colors flex items-center gap-1.5 shrink-0"
+                  >
+                    {isCalculatingShipping ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Calculando...</span>
+                      </>
+                    ) : (
+                      'Calcular'
+                    )}
+                  </button>
+                </form>
+
+                {/* Correios Options List */}
+                {shippingOptions.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-white/10 animate-in fade-in duration-200">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">
+                      Selecione a modalidade dos Correios:
+                    </span>
+                    <div className="grid grid-cols-1 gap-2">
+                      {shippingOptions.map((opt) => {
+                        const isSelected = selectedShippingOption?.id === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setSelectedShippingOption(opt)}
+                            className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
+                              isSelected
+                                ? 'bg-amber-500/15 border-amber-500 text-white shadow-md shadow-amber-500/10'
+                                : 'bg-[#12131a] border-white/10 text-slate-300 hover:border-white/30'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div
+                                className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                  isSelected ? 'border-amber-400 bg-amber-400' : 'border-slate-500'
+                                }`}
+                              >
+                                {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
+                              </div>
+
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-bold text-xs uppercase font-display text-white">
+                                    {opt.id === 'sedex' ? 'SEDEX dos Correios' : 'PAC dos Correios'}
+                                  </span>
+                                  {opt.id === 'sedex' ? (
+                                    <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 text-[9px] font-bold uppercase flex items-center gap-0.5">
+                                      <Zap className="w-2.5 h-2.5" /> Expresso
+                                    </span>
+                                  ) : (
+                                    <span className="px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 text-[9px] font-bold uppercase">
+                                      Econômico
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-slate-400 block mt-0.5">
+                                  Prazo: {opt.deadline}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              {opt.price === 0 ? (
+                                <div>
+                                  {opt.originalPrice && (
+                                    <span className="text-[10px] text-slate-500 line-through block">
+                                      R$ {opt.originalPrice.toFixed(2)}
+                                    </span>
+                                  )}
+                                  <span className="text-xs font-bold text-emerald-400 uppercase font-mono">
+                                    GRÁTIS
+                                  </span>
+                                </div>
+                              ) : (
+                                <div>
+                                  {opt.originalPrice && opt.originalPrice > opt.price && (
+                                    <span className="text-[10px] text-slate-500 line-through block">
+                                      R$ {opt.originalPrice.toFixed(2)}
+                                    </span>
+                                  )}
+                                  <span className="text-xs font-bold text-white font-mono">
+                                    R$ {opt.price.toFixed(2)}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Price Breakdown */}
               <div className="space-y-1.5 pt-2 border-t border-white/10 text-xs">
@@ -280,12 +405,20 @@ export const CartDrawer: React.FC = () => {
                 )}
 
                 <div className="flex justify-between text-slate-400">
-                  <span>Frete</span>
+                  <span>
+                    Frete {selectedShippingOption ? `(${selectedShippingOption.service})` : 'Correios'}
+                  </span>
                   <span className="font-mono">
-                    {freeShippingQualified || shippingCost === 0 ? (
+                    {selectedShippingOption ? (
+                      selectedShippingOption.price === 0 ? (
+                        <span className="text-emerald-400 font-bold uppercase">GRÁTIS</span>
+                      ) : (
+                        `R$ ${selectedShippingOption.price.toFixed(2)}`
+                      )
+                    ) : freeShippingQualified ? (
                       <span className="text-emerald-400 font-bold uppercase">GRÁTIS</span>
                     ) : (
-                      `R$ ${shippingCost.toFixed(2)}`
+                      <span className="text-slate-500 italic">Calcule pelo CEP</span>
                     )}
                   </span>
                 </div>

@@ -12,15 +12,15 @@ export const WhatsAppButton: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end">
+    <div className="fixed bottom-16 sm:bottom-5 right-3 sm:right-5 z-40 flex flex-col items-end">
       {showTooltip && (
-        <div className="mb-2 mr-1 p-3 rounded-2xl bg-[#14161f] border border-amber-500/40 text-xs text-white shadow-2xl max-w-xs animate-in fade-in duration-200 flex items-start gap-2">
+        <div className="mb-2 mr-1 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-[#14161f] border border-amber-500/40 text-xs text-white shadow-2xl max-w-[260px] sm:max-w-xs animate-in fade-in duration-200 flex items-start gap-2">
           <div>
-            <span className="font-bold text-amber-400 block font-display uppercase tracking-wider">
+            <span className="font-bold text-amber-400 block font-display uppercase tracking-wider text-[11px] sm:text-xs">
               Atendimento MN Store
             </span>
-            <p className="text-[11px] text-slate-300 mt-0.5">
-              Dúvidas sobre tamanhos ou personalização? Chame agora no WhatsApp!
+            <p className="text-[10px] sm:text-[11px] text-slate-300 mt-0.5">
+              Dúvidas sobre mantos ou atacado? Chame agora!
             </p>
           </div>
           <button
