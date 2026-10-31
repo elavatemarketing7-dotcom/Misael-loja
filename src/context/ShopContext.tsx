@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Product, CartItem, JerseyCategory, JerseySize, JerseyVersion, CustomizationOption, ShippingOption, ShippingAddressInfo } from '../types';
 import { INITIAL_PRODUCTS } from '../data/products';
-import { calculateCorreios } from '../utils/correios';
+import { calculateCorreios, CORREIOS_ORIGIN } from '../utils/correios';
 
 interface ShopContextType {
   products: Product[];
@@ -31,6 +31,7 @@ interface ShopContextType {
   setSelectedShippingOption: (option: ShippingOption) => void;
   shippingDestination: string;
   shippingAddress: ShippingAddressInfo | null;
+  originAgency: typeof CORREIOS_ORIGIN;
   isCalculatingShipping: boolean;
   calculateShipping: (cep: string) => Promise<void>;
   isCartOpen: boolean;
@@ -409,6 +410,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSelectedShippingOption,
         shippingDestination,
         shippingAddress,
+        originAgency: CORREIOS_ORIGIN,
         isCalculatingShipping,
         calculateShipping,
         isCartOpen,

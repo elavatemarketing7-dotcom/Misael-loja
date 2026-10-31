@@ -268,7 +268,7 @@ export const CartDrawer: React.FC = () => {
           {cart.length > 0 && (
             <div className="p-4 border-t border-white/10 bg-[#151720] space-y-3">
               {/* CEP Correios Shipping Calculator */}
-              <div className="space-y-2 p-3 rounded-xl bg-[#181a24] border border-white/10">
+              <div className="space-y-2.5 p-3 rounded-xl bg-[#181a24] border border-white/10">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-white uppercase tracking-wider flex items-center gap-1.5 font-display">
                     <Truck className="w-4 h-4 text-amber-400" />
@@ -280,6 +280,17 @@ export const CartDrawer: React.FC = () => {
                       {shippingDestination}
                     </span>
                   )}
+                </div>
+
+                {/* Origin Agency Information */}
+                <div className="p-2 rounded-lg bg-black/40 border border-white/5 text-[11px] space-y-0.5">
+                  <div className="flex items-center gap-1 text-amber-400 font-semibold text-[10px] uppercase tracking-wider">
+                    <MapPin className="w-3 h-3 text-amber-400 shrink-0" />
+                    <span>Origem do Envio: Agência Correios São Vicente</span>
+                  </div>
+                  <p className="text-slate-300 text-[10px] leading-tight">
+                    Av. Capitão Luiz Hourneaux, 748 - Jardim Paraíso, São Vicente - SP (CEP 11370-971)
+                  </p>
                 </div>
 
                 <form onSubmit={handleCalcShipping} className="flex gap-2">
@@ -310,9 +321,16 @@ export const CartDrawer: React.FC = () => {
                 {/* Correios Options List */}
                 {shippingOptions.length > 0 && (
                   <div className="space-y-2 pt-2 border-t border-white/10 animate-in fade-in duration-200">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">
-                      Selecione a modalidade dos Correios:
-                    </span>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400">
+                      <span className="uppercase font-bold tracking-wider">
+                        Modalidades dos Correios:
+                      </span>
+                      {shippingDestination && (
+                        <span className="text-emerald-400 font-medium">
+                          Destino: {shippingDestination}
+                        </span>
+                      )}
+                    </div>
                     <div className="grid grid-cols-1 gap-2">
                       {shippingOptions.map((opt) => {
                         const isSelected = selectedShippingOption?.id === opt.id;
@@ -352,7 +370,7 @@ export const CartDrawer: React.FC = () => {
                                   )}
                                 </div>
                                 <span className="text-[10px] text-slate-400 block mt-0.5">
-                                  Prazo: {opt.deadline}
+                                  Prazo: {opt.deadline} (Saída: São Vicente/SP)
                                 </span>
                               </div>
                             </div>

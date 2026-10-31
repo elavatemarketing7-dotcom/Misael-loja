@@ -140,7 +140,8 @@ export const CheckoutModal: React.FC = () => {
       `🦁 *NOVO PEDIDO CONFIRMADO - MN STORE*\n\n` +
       `*Cliente:* ${fullName}\n` +
       `*WhatsApp:* ${phone}\n` +
-      `*Endereço:* ${street}, nº ${number} ${complement ? `(${complement})` : ''} - ${neighborhood}, ${city}/${state} - CEP: ${cep}\n` +
+      `*Origem do Envio:* Agência Correios São Vicente - SP (CEP 11370-971)\n` +
+      `*Endereço de Entrega:* ${street}, nº ${number} ${complement ? `(${complement})` : ''} - ${neighborhood}, ${city}/${state} - CEP: ${cep}\n` +
       `*Modalidade de Envio:* ${shippingDetail}\n\n` +
       `*Mantos Escolhidos (Promoção R$ 120):*\n${itemsText}\n\n` +
       `*Forma de Pagamento:* ${paymentDetail}\n` +
@@ -367,6 +368,20 @@ export const CheckoutModal: React.FC = () => {
                   )}
                 </div>
 
+                {/* Correios Origin Agency Notice */}
+                <div className="p-3 rounded-xl bg-gradient-to-r from-[#181a24] to-[#12131b] border border-amber-500/20 text-xs space-y-1">
+                  <div className="flex items-center gap-1.5 text-amber-400 font-bold uppercase tracking-wider text-[10px]">
+                    <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>Origem do Envio: Agência Correios São Vicente - SP</span>
+                  </div>
+                  <p className="text-slate-300 text-[11px]">
+                    Av. Capitão Luiz Hourneaux, 748 - Jardim Paraíso, São Vicente - SP (CEP 11370-971)
+                  </p>
+                  <p className="text-[10px] text-slate-400">
+                    O cálculo oficial de PAC e SEDEX é realizado da agência de São Vicente até o seu endereço.
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
@@ -492,7 +507,7 @@ export const CheckoutModal: React.FC = () => {
                                   )}
                                 </div>
                                 <span className="text-[10px] text-slate-400 block mt-0.5">
-                                  {opt.deadline}
+                                  Prazo: {opt.deadline} (Saída: São Vicente/SP)
                                 </span>
                               </div>
                             </div>
