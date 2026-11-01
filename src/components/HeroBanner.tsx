@@ -93,7 +93,7 @@ export const HeroBanner: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Scarcity Card: DE R$ 180 POR R$ 120 + Timer */}
+          {/* Right Scarcity Card: DE R$ 180 POR R$ 130 + Timer */}
           <div className="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
             <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[#151722]/90 border border-amber-500/40 shadow-xl backdrop-blur-md flex items-center justify-between sm:justify-start gap-3 sm:gap-6">
               <div>
@@ -105,10 +105,10 @@ export const HeroBanner: React.FC = () => {
                     R$ 180
                   </span>
                   <span className="text-xl sm:text-3xl font-black text-white font-display tracking-tight text-gold-gradient">
-                    R$ 120,00
+                    R$ 130,00
                   </span>
                   <span className="px-1.5 py-0.5 rounded bg-rose-600 text-white font-black text-[9px] sm:text-[10px] uppercase tracking-wider">
-                    -33% OFF
+                    -28% OFF
                   </span>
                 </div>
                 <div className="space-y-0.5 mt-0.5 text-[10px] sm:text-xs">

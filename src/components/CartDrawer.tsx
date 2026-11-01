@@ -73,7 +73,7 @@ export const CartDrawer: React.FC = () => {
 
     const message = encodeURIComponent(
       `🦁 *NOVO PEDIDO - MN STORE*\n\n` +
-      `Olá MN Store! Gostaria de fechar meu pedido das camisas de time na promoção (De R$ 180 por R$ 120):\n\n` +
+      `Olá MN Store! Gostaria de fechar meu pedido das camisas de time na promoção (De R$ 180 por R$ 130):\n\n` +
       `${itemsText}\n\n` +
       `${shippingLine}\n` +
       `*Total a pagar:* R$ ${cartTotal.toFixed(2)}\n` +
@@ -168,7 +168,7 @@ export const CartDrawer: React.FC = () => {
                   Sua sacola está vazia
                 </h4>
                 <p className="text-xs text-slate-400 max-w-xs">
-                  Aproveite nossa queima de estoque: todos os mantos oficiais de R$ 180 por apenas R$ 120!
+                  Aproveite nossa queima de estoque: todos os mantos oficiais de R$ 180 por apenas R$ 130!
                 </p>
                 <button
                   onClick={() => setIsCartOpen(false)}

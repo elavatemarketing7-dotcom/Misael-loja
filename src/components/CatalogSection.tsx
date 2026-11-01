@@ -63,7 +63,12 @@ export const CatalogSection: React.FC = () => {
 
     // Sorting
     if (sortBy === 'popular') {
-      list.sort((a, b) => (b.isBestseller ? 1 : 0) - (a.isBestseller ? 1 : 0));
+      list.sort((a, b) => {
+        const isCustomA = a.id.startsWith('mn-custom-') ? 1 : 0;
+        const isCustomB = b.id.startsWith('mn-custom-') ? 1 : 0;
+        if (isCustomA !== isCustomB) return isCustomB - isCustomA;
+        return (b.isBestseller ? 1 : 0) - (a.isBestseller ? 1 : 0);
+      });
     } else if (sortBy === 'stock') {
       list.sort((a, b) => a.stockCount - b.stockCount);
     } else if (sortBy === 'name') {
@@ -85,7 +90,7 @@ export const CatalogSection: React.FC = () => {
             <span className="text-slate-500">·</span>
             <span className="text-[11px] sm:text-xs text-rose-400 font-semibold flex items-center gap-1">
               <Flame className="w-3.5 h-3.5" />
-              Preço único: De R$ 180 por R$ 120
+              Preço único: De R$ 180 por R$ 130
             </span>
           </div>
 
@@ -251,7 +256,7 @@ export const CatalogSection: React.FC = () => {
             Não encontrou o manto do seu time do coração?
           </span>
           <h3 className="text-lg sm:text-xl font-black text-white font-display uppercase">
-            NÓS ENCOMENDAMOS QUALQUER CAMISA DO MUNDO PARA VOCÊ POR R$ 120!
+            NÓS ENCOMENDAMOS QUALQUER CAMISA DO MUNDO PARA VOCÊ POR R$ 130!
           </h3>
           <p className="text-xs text-slate-400">
             Trabalhamos com mais de 500 modelos de clubes do Brasil, Europa, Ásia e seleções históricas.
@@ -259,7 +264,7 @@ export const CatalogSection: React.FC = () => {
         </div>
 
         <a
-          href="https://wa.me/5511999999999?text=Ol%C3%A1%20MN%20Store!%20Gostaria%20de%20encomendar%20um%20manto%20espec%C3%ADfico%20na%20promo%C3%A7%C3%A3o%20de%20R$%20120."
+          href="https://wa.me/5511999999999?text=Ol%C3%A1%20MN%20Store!%20Gostaria%20de%20encomendar%20um%20manto%20espec%C3%ADfico%20na%20promo%C3%A7%C3%A3o%20de%20R$%20130."
           target="_blank"
           rel="noopener noreferrer"
           className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shrink-0 transition-colors shadow-lg shadow-emerald-600/20"

@@ -11,7 +11,7 @@ export interface Product {
   league: string;
   category: JerseyCategory;
   originalPrice: number; // 180
-  promoPrice: number; // 120
+  promoPrice: number; // 130
   image: string;
   fallbackColor: string; // for fallback graphic if no image
   secondaryImage?: string;

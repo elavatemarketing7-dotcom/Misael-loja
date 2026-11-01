@@ -60,7 +60,7 @@ export const RecentSalesToast: React.FC = () => {
             Comprou {current.item}
           </p>
           <div className="flex items-center gap-2 text-[10px] text-slate-400">
-            <span className="font-mono text-emerald-400 font-bold">R$ 120,00</span>
+            <span className="font-mono text-emerald-400 font-bold">R$ 130,00</span>
             <span>·</span>
             <span>{current.time}</span>
           </div>

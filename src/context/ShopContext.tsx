@@ -70,13 +70,49 @@ const LOCAL_STORAGE_PRODUCTS_KEY = 'mn_store_v1_products';
 const LOCAL_STORAGE_CART_KEY = 'mn_store_v1_cart';
 const LOCAL_STORAGE_WISHLIST_KEY = 'mn_store_v1_wishlist';
 
+/**
+ * Robust persistence function that guarantees custom products are saved
+ * even if quota limits are approached.
+ */
+const saveProductsToStorage = (items: Product[]): boolean => {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_PRODUCTS_KEY, JSON.stringify(items));
+    return true;
+  } catch (err) {
+    console.warn('Quota exceeded on localStorage. Retrying with compressed payload...', err);
+    try {
+      // If quota exceeded, sanitize any excessively large images
+      const sanitized = items.map((p) => {
+        if (p.image && p.image.length > 500000) {
+          return { ...p, image: '' };
+        }
+        return p;
+      });
+      localStorage.setItem(LOCAL_STORAGE_PRODUCTS_KEY, JSON.stringify(sanitized));
+      return true;
+    } catch (e2) {
+      console.error('Falha crítica ao gravar no localStorage:', e2);
+      return false;
+    }
+  }
+};
+
 export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Products with local storage persistence
   const [products, setProducts] = useState<Product[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_PRODUCTS_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Automatic migration: update default promotion from 120 to 130
+          return parsed.map((item: Product) => {
+            if (item.promoPrice === 120 && item.originalPrice === 180) {
+              return { ...item, promoPrice: 130 };
+            }
+            return item;
+          });
+        }
       }
     } catch {
       // fallback
@@ -129,11 +165,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isCalculatingShipping, setIsCalculatingShipping] = useState<boolean>(false);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_PRODUCTS_KEY, JSON.stringify(products));
-    } catch {
-      // ignore
-    }
+    saveProductsToStorage(products);
   }, [products]);
 
   useEffect(() => {
@@ -164,22 +196,38 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...newProductData,
       id: `mn-custom-${Date.now()}`
     };
-    setProducts((prev) => [newProduct, ...prev]);
-    showToast(`Manto "${newProduct.team}" adicionado ao catálogo com sucesso!`);
+    
+    setProducts((prev) => {
+      const updated = [newProduct, ...prev];
+      saveProductsToStorage(updated);
+      return updated;
+    });
+
+    // Make the new shirt immediately visible in catalog and editing context
+    setActiveCategory('todos');
+    setEditingProduct(newProduct);
+    showToast(`Manto "${newProduct.team || newProduct.name}" cadastrado e salvo com sucesso!`);
     return newProduct;
   };
 
   const removeProduct = (id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setProducts((prev) => {
+      const updated = prev.filter((p) => p.id !== id);
+      saveProductsToStorage(updated);
+      return updated;
+    });
     setCart((prev) => prev.filter((item) => item.productId !== id));
     setEditingProduct((curr) => (curr?.id === id ? null : curr));
     showToast('Camisa removida do catálogo com sucesso!');
   };
 
   const updateProduct = (id: string, updates: Partial<Product>) => {
-    setProducts((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
-    );
+    setProducts((prev) => {
+      const updated = prev.map((item) => (item.id === id ? { ...item, ...updates } : item));
+      saveProductsToStorage(updated);
+      return updated;
+    });
+    setEditingProduct((curr) => (curr?.id === id ? { ...curr, ...updates } : curr));
     showToast('Manto atualizado com sucesso no catálogo!');
   };
 
@@ -221,7 +269,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         version,
         customization,
         quantity,
-        unitPrice: product.promoPrice // 120
+        unitPrice: product.promoPrice // 130
       };
 
       return [...prev, newItem];

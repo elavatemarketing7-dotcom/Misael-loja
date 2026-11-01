@@ -60,7 +60,7 @@ export const Header: React.FC = () => {
 
           <span className="flex items-center gap-1 font-display uppercase tracking-wider text-[11px] sm:text-sm font-black whitespace-nowrap">
             <Flame className="w-3.5 h-3.5 fill-black" />
-            DE R$ 180 POR R$ 120
+            DE R$ 180 POR R$ 130
           </span>
 
           <span className="hidden md:inline font-bold text-black/60">·</span>

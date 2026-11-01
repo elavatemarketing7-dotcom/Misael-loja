@@ -14,10 +14,13 @@ import {
   Edit3,
   Shirt,
   DollarSign,
-  TrendingDown
+  TrendingDown,
+  Eye,
+  Loader2
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { Product, JerseyCategory } from '../types';
+import { compressImage } from '../utils/imageCompressor';
 
 export const ProductEditorModal: React.FC = () => {
   const {
@@ -31,7 +34,8 @@ export const ProductEditorModal: React.FC = () => {
     updateProduct,
     addProduct,
     removeProduct,
-    resetProductsToDefault
+    resetProductsToDefault,
+    showToast
   } = useShop();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,6 +43,8 @@ export const ProductEditorModal: React.FC = () => {
 
   // Tab: 'edit' or 'create'
   const [activeTab, setActiveTab] = useState<'edit' | 'create'>('edit');
+  const [createdProductSuccess, setCreatedProductSuccess] = useState<Product | null>(null);
+  const [isCompressingImage, setIsCompressingImage] = useState(false);
 
   // Edit fields
   const [selectedId, setSelectedId] = useState<string>('');
@@ -48,7 +54,7 @@ export const ProductEditorModal: React.FC = () => {
   const [category, setCategory] = useState<JerseyCategory>('brasileirao');
   const [imageUrl, setImageUrl] = useState('');
   const [originalPrice, setOriginalPrice] = useState<number>(180);
-  const [promoPrice, setPromoPrice] = useState<number>(120);
+  const [promoPrice, setPromoPrice] = useState<number>(130);
   const [stockCount, setStockCount] = useState(3);
   const [description, setDescription] = useState('');
   const [season, setSeason] = useState('2024/2025');
@@ -63,7 +69,7 @@ export const ProductEditorModal: React.FC = () => {
   const [newCategory, setNewCategory] = useState<JerseyCategory>('brasileirao');
   const [newImageUrl, setNewImageUrl] = useState('');
   const [newOriginalPrice, setNewOriginalPrice] = useState<number>(180);
-  const [newPromoPrice, setNewPromoPrice] = useState<number>(120);
+  const [newPromoPrice, setNewPromoPrice] = useState<number>(130);
   const [newStockCount, setNewStockCount] = useState(3);
   const [newDescription, setNewDescription] = useState('');
   const [newSeason, setNewSeason] = useState('2024/2025');
@@ -79,7 +85,7 @@ export const ProductEditorModal: React.FC = () => {
       setCategory(current.category);
       setImageUrl(current.image || '');
       setOriginalPrice(current.originalPrice || 180);
-      setPromoPrice(current.promoPrice || 120);
+      setPromoPrice(current.promoPrice || 130);
       setStockCount(current.stockCount);
       setDescription(current.description);
       setSeason(current.season || '2024/2025');
@@ -99,7 +105,7 @@ export const ProductEditorModal: React.FC = () => {
       setCategory(found.category);
       setImageUrl(found.image || '');
       setOriginalPrice(found.originalPrice || 180);
-      setPromoPrice(found.promoPrice || 120);
+      setPromoPrice(found.promoPrice || 130);
       setStockCount(found.stockCount);
       setDescription(found.description);
       setSeason(found.season || '2024/2025');
@@ -107,21 +113,36 @@ export const ProductEditorModal: React.FC = () => {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, isNew = false) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, isNew = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        if (isNew) {
-          setNewImageUrl(reader.result);
-        } else {
-          setImageUrl(reader.result);
-        }
+    setIsCompressingImage(true);
+    try {
+      const compressedDataUrl = await compressImage(file, 960, 960, 0.82);
+      if (isNew) {
+        setNewImageUrl(compressedDataUrl);
+      } else {
+        setImageUrl(compressedDataUrl);
       }
-    };
-    reader.readAsDataURL(file);
+      showToast('Foto do manto carregada e otimizada!');
+    } catch (err: unknown) {
+      console.warn('Fallback para leitor padrão:', err);
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          if (isNew) {
+            setNewImageUrl(reader.result);
+          } else {
+            setImageUrl(reader.result);
+          }
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsCompressingImage(false);
+      e.target.value = '';
+    }
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -135,7 +156,7 @@ export const ProductEditorModal: React.FC = () => {
       category,
       image: imageUrl,
       originalPrice: Number(originalPrice) || 180,
-      promoPrice: Number(promoPrice) || 120,
+      promoPrice: Number(promoPrice) || 130,
       stockCount: Number(stockCount),
       description,
       season,
@@ -150,24 +171,52 @@ export const ProductEditorModal: React.FC = () => {
 
   const handleCreateProduct = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTeam.trim() || !newName.trim()) return;
+    const cleanTeam = newTeam.trim();
+    const cleanName = newName.trim();
+
+    if (!cleanTeam && !cleanName) {
+      showToast('Por favor, informe pelo menos o Nome da Camisa e o Clube.');
+      return;
+    }
+
+    const finalTeam = cleanTeam || cleanName;
+    const finalName = cleanName || `Camisa Oficial ${finalTeam}`;
 
     const created = addProduct({
-      name: newName,
-      team: newTeam,
-      league: newLeague || 'Campeonato Oficial',
+      name: finalName,
+      team: finalTeam,
+      league: newLeague.trim() || 'Campeonato Oficial',
       category: newCategory,
       originalPrice: Number(newOriginalPrice) || 180,
-      promoPrice: Number(newPromoPrice) || 120,
-      image: newImageUrl,
+      promoPrice: Number(newPromoPrice) || 130,
+      image: newImageUrl.trim(),
       fallbackColor: newFallbackColor,
       stockCount: Number(newStockCount) || 3,
       availableSizes: ['P', 'M', 'G', 'GG'],
-      isFeatured: false,
+      isFeatured: true,
       isBestseller: true,
-      description: newDescription || `Manto oficial ${newTeam} temporada ${newSeason}. Confeccionado com tecnologia respirável.`,
-      season: newSeason || '2024/2025'
+      description:
+        newDescription.trim() ||
+        `Manto oficial ${finalTeam} temporada ${newSeason.trim() || '2024/2025'}. Confeccionado em tecido tecnológico dry-fit respirável.`,
+      season: newSeason.trim() || '2024/2025'
     });
+
+    // Populate the edit form fields directly with the created product so there's zero desync
+    setSelectedId(created.id);
+    setName(created.name);
+    setTeam(created.team);
+    setLeague(created.league);
+    setCategory(created.category);
+    setImageUrl(created.image || '');
+    setOriginalPrice(created.originalPrice);
+    setPromoPrice(created.promoPrice);
+    setStockCount(created.stockCount);
+    setDescription(created.description);
+    setSeason(created.season);
+    setFallbackColor(created.fallbackColor || '#111111');
+
+    // Show celebration banner in modal
+    setCreatedProductSuccess(created);
 
     // Reset new form
     setNewName('');
@@ -176,11 +225,7 @@ export const ProductEditorModal: React.FC = () => {
     setNewImageUrl('');
     setNewDescription('');
     setNewOriginalPrice(180);
-    setNewPromoPrice(120);
-
-    // Switch to edit tab with newly created item
-    setActiveTab('edit');
-    handleSelectProduct(created.id);
+    setNewPromoPrice(130);
   };
 
   const handleDeleteCurrentProduct = () => {
@@ -238,7 +283,7 @@ export const ProductEditorModal: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Diversifique os valores de cada camisa (ex: De 180 por 120, De 200 por 160), adicione ou remova mantos
+                Diversifique os valores de cada camisa (ex: De 180 por 130, De 200 por 160), adicione ou remova mantos
               </p>
             </div>
           </div>
@@ -388,11 +433,11 @@ export const ProductEditorModal: React.FC = () => {
                         type="button"
                         onClick={() => {
                           setOriginalPrice(180);
-                          setPromoPrice(120);
+                          setPromoPrice(130);
                         }}
                         className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 border border-white/10 shrink-0 transition-colors"
                       >
-                        De 180 por 120 (33% OFF)
+                        De 180 por 130 (28% OFF)
                       </button>
                       <button
                         type="button"
@@ -448,7 +493,7 @@ export const ProductEditorModal: React.FC = () => {
                             type="number"
                             min="1"
                             step="1"
-                            placeholder="120"
+                            placeholder="130"
                             value={promoPrice}
                             onChange={(e) => setPromoPrice(Number(e.target.value))}
                             className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-[#111216] border border-amber-500/50 text-amber-300 font-mono text-sm font-bold focus:outline-none focus:border-amber-400"
@@ -520,11 +565,21 @@ export const ProductEditorModal: React.FC = () => {
                         />
                         <button
                           type="button"
+                          disabled={isCompressingImage}
                           onClick={() => fileInputRef.current?.click()}
-                          className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase tracking-wider flex items-center gap-2 mx-auto transition-transform active:scale-95 shadow-lg shadow-amber-500/20"
+                          className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-bold text-xs uppercase tracking-wider flex items-center gap-2 mx-auto transition-transform active:scale-95 shadow-lg shadow-amber-500/20"
                         >
-                          <Upload className="w-4 h-4" />
-                          Enviar Foto do Computador / Celular
+                          {isCompressingImage ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Otimizando foto...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4" />
+                              Enviar Foto do Computador / Celular
+                            </>
+                          )}
                         </button>
                         <p className="text-[11px] text-slate-400">
                           Formatos aceitos: JPG, PNG, WEBP (foto de estúdio da camisa)
@@ -674,6 +729,66 @@ export const ProductEditorModal: React.FC = () => {
           ) : (
             /* ================= TAB 2: ADD NEW JERSEY WITH PRICES ================= */
             <form onSubmit={handleCreateProduct} className="space-y-6 animate-in fade-in duration-150">
+              {/* Celebration Success Banner when shirt is created */}
+              {createdProductSuccess && (
+                <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/80 via-[#141620] to-emerald-950/60 border-2 border-emerald-500/60 shadow-xl space-y-3 animate-in zoom-in-95 duration-200">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-emerald-500 text-black flex items-center justify-center font-bold shrink-0 shadow-lg">
+                      <Check className="w-6 h-6 stroke-[3]" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded bg-emerald-500 text-black text-[10px] font-black uppercase tracking-wider">
+                          Salvo no Catálogo
+                        </span>
+                        <span className="text-xs text-amber-400 font-mono font-bold">
+                          R$ {createdProductSuccess.promoPrice},00
+                        </span>
+                      </div>
+                      <h4 className="font-bold text-white text-base uppercase tracking-wide font-display mt-0.5">
+                        {createdProductSuccess.name}
+                      </h4>
+                      <p className="text-xs text-slate-300 mt-0.5">
+                        Este manto sagrado foi salvo e já está aparecendo no topo do catálogo da loja!
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsLojistaModalOpen(false);
+                        const el = document.getElementById('catalogo-de-mantos');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      Ver Manto no Catálogo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCreatedProductSuccess(null);
+                        setActiveTab('edit');
+                      }}
+                      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs uppercase tracking-wider transition-colors flex items-center gap-1.5"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      Editar Detalhes Desta Camisa
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCreatedProductSuccess(null)}
+                      className="px-3 py-2 text-xs text-slate-400 hover:text-white transition-colors"
+                    >
+                      Dispensar aviso
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Header Box */}
               <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-slate-200 space-y-1">
                 <span className="font-bold text-amber-400 uppercase tracking-wider block font-display text-sm">
@@ -705,11 +820,11 @@ export const ProductEditorModal: React.FC = () => {
                     type="button"
                     onClick={() => {
                       setNewOriginalPrice(180);
-                      setNewPromoPrice(120);
+                      setNewPromoPrice(130);
                     }}
                     className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 border border-white/10 shrink-0 transition-colors"
                   >
-                    De 180 por 120 (33% OFF)
+                    De 180 por 130 (28% OFF)
                   </button>
                   <button
                     type="button"
@@ -765,7 +880,7 @@ export const ProductEditorModal: React.FC = () => {
                         type="number"
                         min="1"
                         step="1"
-                        placeholder="120"
+                        placeholder="130"
                         value={newPromoPrice}
                         onChange={(e) => setNewPromoPrice(Number(e.target.value))}
                         className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-[#111216] border border-amber-500/50 text-amber-300 font-mono text-sm font-bold focus:outline-none focus:border-amber-400"
@@ -838,11 +953,21 @@ export const ProductEditorModal: React.FC = () => {
                     />
                     <button
                       type="button"
+                      disabled={isCompressingImage}
                       onClick={() => newFileInputRef.current?.click()}
-                      className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase tracking-wider flex items-center gap-2 mx-auto transition-transform active:scale-95 shadow-lg shadow-amber-500/20"
+                      className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-bold text-xs uppercase tracking-wider flex items-center gap-2 mx-auto transition-transform active:scale-95 shadow-lg shadow-amber-500/20"
                     >
-                      <Upload className="w-4 h-4" />
-                      Enviar Foto do Celular / Computador
+                      {isCompressingImage ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Otimizando foto...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          Enviar Foto do Celular / Computador
+                        </>
+                      )}
                     </button>
                     <p className="text-[11px] text-slate-400">
                       Formatos aceitos: JPG, PNG, WEBP

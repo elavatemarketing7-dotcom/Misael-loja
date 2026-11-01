@@ -43,10 +43,10 @@ export const StoreGuaranteesSection: React.FC = () => {
                 <Flame className="w-5 h-5 sm:w-6 sm:h-6 fill-amber-400/20" />
               </div>
               <span className="px-2 py-0.5 rounded bg-rose-600 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-wider mb-2 inline-block">
-                Economize R$ 60
+                Economize R$ 50
               </span>
               <h3 className="text-base sm:text-lg font-bold text-white uppercase font-display">
-                De R$ 180 por R$ 120
+                De R$ 180 por R$ 130
               </h3>
               <p className="text-xs text-slate-400 mt-1.5 sm:mt-2 leading-relaxed">
                 Preço promocional direto de lote. O melhor custo-benefício em mantos com qualidade tailandesa 1:1 do Brasil.

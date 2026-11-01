@@ -102,7 +102,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </span>
           )}
           <span className="px-1.5 py-0.5 rounded bg-black/85 backdrop-blur-sm text-amber-400 font-bold text-[8px] sm:text-[10px] font-mono border border-amber-500/30">
-            DE 180 POR 120
+            DE {product.originalPrice} POR {product.promoPrice}
           </span>
         </div>
 

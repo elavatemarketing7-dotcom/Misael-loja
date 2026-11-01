@@ -148,7 +148,7 @@ export const Footer: React.FC = () => {
       <div className="border-t border-white/5 py-6 px-4 text-center text-[11px] text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <p>© {new Date().getFullYear()} MN Store. Todos os direitos reservados. Especialistas em camisas de time de futebol.</p>
-          <p className="text-amber-400/80 font-mono">Oferta Relâmpago: De R$ 180 por R$ 120</p>
+          <p className="text-amber-400/80 font-mono">Oferta Relâmpago: De R$ 180 por R$ 130</p>
         </div>
       </div>
     </footer>

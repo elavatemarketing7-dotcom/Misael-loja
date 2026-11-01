@@ -143,7 +143,7 @@ export const CheckoutModal: React.FC = () => {
       `*Origem do Envio:* Agência Correios São Vicente - SP (CEP 11370-971)\n` +
       `*Endereço de Entrega:* ${street}, nº ${number} ${complement ? `(${complement})` : ''} - ${neighborhood}, ${city}/${state} - CEP: ${cep}\n` +
       `*Modalidade de Envio:* ${shippingDetail}\n\n` +
-      `*Mantos Escolhidos (Promoção R$ 120):*\n${itemsText}\n\n` +
+      `*Mantos Escolhidos (Promoção R$ 130):*\n${itemsText}\n\n` +
       `*Forma de Pagamento:* ${paymentDetail}\n` +
       `*Total do Pedido:* R$ ${finalOrderTotal.toFixed(2)}\n\n` +
       `Por favor, confirmem o envio do código de rastreamento dos Correios!`
@@ -309,7 +309,7 @@ export const CheckoutModal: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
                   <span className="text-slate-200">
-                    Garantindo <strong className="text-white">{cart.length} manto(s)</strong> na promoção <strong>R$ 120 cada</strong>!
+                    Garantindo <strong className="text-white">{cart.length} manto(s)</strong> na promoção <strong>R$ 130 cada</strong>!
                     {selectedShippingOption && (
                       <span className="ml-1 text-slate-400">
                         · Frete: <strong className="text-amber-300">{selectedShippingOption.service} ({selectedShippingOption.price === 0 ? 'GRÁTIS' : `R$ ${selectedShippingOption.price.toFixed(2)}`})</strong>
