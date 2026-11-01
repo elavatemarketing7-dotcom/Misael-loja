@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { JerseyCategory } from '../types';
+import { getWhatsAppUrl } from '../utils/whatsapp';
 
 export const Header: React.FC = () => {
   const {
@@ -47,7 +48,7 @@ export const Header: React.FC = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-1.5 sm:gap-4 flex-wrap">
           {/* WhatsApp Callout no começo */}
           <a
-            href="https://wa.me/5511999999999?text=Ol%C3%A1%20MN%20Store!%20Gostaria%20de%20fazer%20um%20pedido%20acima%20de%2010%20pe%C3%A7as%20no%20atacado."
+            href={getWhatsAppUrl("Olá MN Store! Gostaria de fazer um pedido acima de 10 peças no atacado.")}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 bg-black hover:bg-zinc-900 text-amber-300 hover:text-white px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-sm transition-all transform hover:scale-105 active:scale-95 cursor-pointer border border-amber-400/40 shrink-0"

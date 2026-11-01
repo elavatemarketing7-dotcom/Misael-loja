@@ -11,6 +11,7 @@ import {
   CreditCard,
   MessageCircle
 } from 'lucide-react';
+import { getWhatsAppUrl } from '../utils/whatsapp';
 
 export const HeroBanner: React.FC = () => {
   // Scarcity countdown timer (simulating remaining offer time)
@@ -72,7 +73,7 @@ export const HeroBanner: React.FC = () => {
                 </div>
 
                 <a
-                  href="https://wa.me/5511999999999?text=Ol%C3%A1%20MN%20Store!%20Gostaria%20de%20fazer%20um%20pedido%20acima%20de%2010%20pe%C3%A7as%20no%20atacado."
+                  href={getWhatsAppUrl("Olá MN Store! Gostaria de fazer um pedido acima de 10 peças no atacado.")}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/30 hover:text-emerald-200 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all"

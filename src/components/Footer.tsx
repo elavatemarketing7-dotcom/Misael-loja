@@ -33,10 +33,18 @@ export const Footer: React.FC = () => {
             Sua loja exclusiva para mantos e camisas de time de futebol. Nacionais, europeus, seleções e retrô históricas com padrão premium e acabamento de jogo.
           </p>
 
-          <div className="pt-2">
+          <div className="pt-1 flex flex-col gap-2">
+            <a
+              href="https://wa.me/message/LC7PW3CRA6G5P1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-xs font-bold text-emerald-400 hover:text-emerald-300"
+            >
+              <span>WhatsApp Oficial MN Store: Encomende seu manto</span>
+            </a>
             <button
               onClick={() => openProductEditor()}
-              className="text-xs text-amber-400 hover:text-amber-300 underline underline-offset-4"
+              className="text-xs text-amber-400 hover:text-amber-300 underline underline-offset-4 text-left"
             >
               Painel do Lojista: Editar Fotos & Produtos
             </button>
@@ -138,7 +146,7 @@ export const Footer: React.FC = () => {
             </div>
             <div className="flex items-center gap-2 text-slate-300">
               <Lock className="w-4 h-4 text-emerald-400" />
-              <span>Checkout Criptografado SSL 256 bits</span>
+              <span>Encomendas Diretas & Seguras pelo WhatsApp Oficial</span>
             </div>
           </div>
         </div>

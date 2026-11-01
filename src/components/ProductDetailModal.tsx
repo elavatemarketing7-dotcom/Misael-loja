@@ -15,11 +15,13 @@ import {
   Zap,
   CreditCard,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  MessageCircle
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { JerseySize, JerseyVersion, CustomizationOption } from '../types';
 import { calculateInstallments } from '../utils/installments';
+import { getWhatsAppUrl, buildSingleProductWhatsAppMessage } from '../utils/whatsapp';
 
 export const ProductDetailModal: React.FC = () => {
   const {
@@ -30,8 +32,7 @@ export const ProductDetailModal: React.FC = () => {
     openProductEditor,
     wishlist,
     toggleWishlist,
-    setIsCartOpen,
-    setIsCheckoutOpen
+    setIsCartOpen
   } = useShop();
 
   const product = selectedProductDetail;
@@ -50,22 +51,25 @@ export const ProductDetailModal: React.FC = () => {
 
   const isFavorited = wishlist.includes(product.id);
 
-  const handleAddToCart = (openCheckout = false) => {
-    const custom: CustomizationOption = {
-      enabled: customizationEnabled,
-      name: customizationEnabled ? customName.toUpperCase().trim() : '',
-      number: customizationEnabled ? customNumber.trim() : '',
-      patch
-    };
+  const getCustomization = (): CustomizationOption => ({
+    enabled: customizationEnabled,
+    name: customizationEnabled ? customName.toUpperCase().trim() : '',
+    number: customizationEnabled ? customNumber.trim() : '',
+    patch
+  });
 
-    addToCart(product, selectedSize, selectedVersion, custom, quantity);
+  const handleAddToCart = () => {
+    addToCart(product, selectedSize, selectedVersion, getCustomization(), quantity);
     setSelectedProductDetail(null);
+    setIsCartOpen(true);
+  };
 
-    if (openCheckout) {
-      setIsCheckoutOpen(true);
-    } else {
-      setIsCartOpen(true);
-    }
+  const handleOrderDirectWhatsApp = () => {
+    const custom = getCustomization();
+    addToCart(product, selectedSize, selectedVersion, custom, quantity);
+    const msg = buildSingleProductWhatsAppMessage(product, selectedSize, selectedVersion, custom, quantity);
+    setSelectedProductDetail(null);
+    window.open(getWhatsAppUrl(msg), '_blank');
   };
 
   const handleShare = () => {
@@ -495,8 +499,8 @@ export const ProductDetailModal: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => handleAddToCart(false)}
-                  className="flex-1 py-3 px-4 rounded-xl border border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all"
+                  onClick={handleAddToCart}
+                  className="flex-1 py-3 px-4 rounded-xl border border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   Adicionar à Sacola
@@ -505,11 +509,11 @@ export const ProductDetailModal: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => handleAddToCart(true)}
-                className="w-full py-3.5 px-6 rounded-xl bg-gold-gradient text-black font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-amber-500/25 hover:brightness-110 active:scale-98 transition-all"
+                onClick={handleOrderDirectWhatsApp}
+                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-950/60 hover:brightness-110 active:scale-98 transition-all cursor-pointer"
               >
-                <Zap className="w-4 h-4 fill-black" />
-                Comprar Agora com Desconto (R$ {product.promoPrice},00)
+                <MessageCircle className="w-4 h-4 fill-white text-emerald-700 shrink-0" />
+                <span>Encomendar pelo WhatsApp (R$ {product.promoPrice * quantity},00)</span>
               </button>
             </div>
 

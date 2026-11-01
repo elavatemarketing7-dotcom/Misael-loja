@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { MessageCircle, X } from 'lucide-react';
+import { getWhatsAppUrl } from '../utils/whatsapp';
 
 export const WhatsAppButton: React.FC = () => {
   const [showTooltip, setShowTooltip] = useState(true);
 
   const handleClick = () => {
-    const text = encodeURIComponent(
-      'Olá MN Store! Gostaria de tirar dúvidas sobre as camisas de time na promoção (De R$ 180 por R$ 130).'
-    );
-    window.open(`https://wa.me/5511999999999?text=${text}`, '_blank');
+    const text = 'Olá MN Store! Gostaria de tirar dúvidas sobre as camisas de time na promoção (De R$ 180 por R$ 130).';
+    window.open(getWhatsAppUrl(text), '_blank');
   };
 
   return (

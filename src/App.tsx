@@ -7,12 +7,12 @@ import React from 'react';
 import { ShopProvider, useShop } from './context/ShopContext';
 import { Header } from './components/Header';
 import { HeroBanner } from './components/HeroBanner';
+import { VideoShowcaseSection } from './components/VideoShowcaseSection';
 import { CatalogSection } from './components/CatalogSection';
 import { StoreGuaranteesSection } from './components/StoreGuaranteesSection';
 import { Footer } from './components/Footer';
 import { ProductDetailModal } from './components/ProductDetailModal';
 import { CartDrawer } from './components/CartDrawer';
-import { CheckoutModal } from './components/CheckoutModal';
 import { ProductEditorModal } from './components/ProductEditorModal';
 import { LojistaLoginModal } from './components/LojistaLoginModal';
 import { SizeGuideModal } from './components/SizeGuideModal';
@@ -46,7 +46,10 @@ function MainLayout() {
       {/* 1. Em Cima: Qualidade Tailandesa 1:1 Banner */}
       <HeroBanner />
 
-      {/* 2. Em Baixo: Já o Catálogo de Mantos */}
+      {/* 2. Em Destaque: Vídeo na Moldura mostrando o Material Real */}
+      <VideoShowcaseSection />
+
+      {/* 3. Catálogo de Mantos */}
       <main className="flex-1 w-full max-w-full overflow-x-hidden">
         <CatalogSection />
       </main>
@@ -63,7 +66,6 @@ function MainLayout() {
       {/* Modals & Overlays */}
       <ProductDetailModal />
       <CartDrawer />
-      <CheckoutModal />
       <LojistaLoginModal />
       <ProductEditorModal />
       <SizeGuideModal />

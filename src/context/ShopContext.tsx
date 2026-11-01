@@ -36,8 +36,6 @@ interface ShopContextType {
   calculateShipping: (cep: string) => Promise<void>;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
-  isCheckoutOpen: boolean;
-  setIsCheckoutOpen: (open: boolean) => void;
   isLojistaModalOpen: boolean;
   setIsLojistaModalOpen: (open: boolean) => void;
   isLojistaLoginOpen: boolean;
@@ -144,7 +142,6 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // UI state
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isLojistaModalOpen, setIsLojistaModalOpen] = useState(false);
   const [isLojistaLoginOpen, setIsLojistaLoginOpen] = useState(false);
   const [isLojistaAuthenticated, setIsLojistaAuthenticated] = useState<boolean>(false);
@@ -520,8 +517,6 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         calculateShipping,
         isCartOpen,
         setIsCartOpen,
-        isCheckoutOpen,
-        setIsCheckoutOpen,
         isLojistaModalOpen,
         setIsLojistaModalOpen,
         isLojistaLoginOpen,

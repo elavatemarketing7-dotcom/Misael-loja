@@ -218,8 +218,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 </>
               ) : (
                 <>
-                  <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-black" />
-                  <span>Comprar</span>
+                  <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  <span>Encomendar</span>
                 </>
               )}
             </button>

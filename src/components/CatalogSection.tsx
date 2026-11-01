@@ -12,6 +12,7 @@ import {
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from './ProductCard';
 import { JerseyCategory, JerseySize } from '../types';
+import { getWhatsAppUrl } from '../utils/whatsapp';
 
 export const CatalogSection: React.FC = () => {
   const {
@@ -264,7 +265,7 @@ export const CatalogSection: React.FC = () => {
         </div>
 
         <a
-          href="https://wa.me/5511999999999?text=Ol%C3%A1%20MN%20Store!%20Gostaria%20de%20encomendar%20um%20manto%20espec%C3%ADfico%20na%20promo%C3%A7%C3%A3o%20de%20R$%20130."
+          href={getWhatsAppUrl("Olá MN Store! Gostaria de encomendar um manto específico na promoção de R$ 130.")}
           target="_blank"
           rel="noopener noreferrer"
           className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shrink-0 transition-colors shadow-lg shadow-emerald-600/20"
