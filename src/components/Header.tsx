@@ -70,7 +70,7 @@ export const Header: React.FC = () => {
           <span className="hidden sm:inline font-bold text-black/60">·</span>
           <span className="hidden sm:inline font-bold flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" />
-            Frete Grátis acima de 2 peças
+            Frete Grátis a partir de 3 peças
           </span>
         </div>
       </div>

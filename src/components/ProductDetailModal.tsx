@@ -521,7 +521,7 @@ export const ProductDetailModal: React.FC = () => {
             <div className="grid grid-cols-2 gap-3 pt-2 text-[11px] text-slate-400">
               <div className="flex items-center gap-2">
                 <Truck className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>Frete Grátis acima de 2 camisas</span>
+                <span>Frete Grátis a partir de 3 camisas</span>
               </div>
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />

@@ -295,7 +295,7 @@ export const VideoShowcaseSection: React.FC = () => {
                   </span>
                 </div>
                 <span className="text-[10px] text-emerald-400 font-semibold block">
-                  Frete Grátis acima de 2 camisas via Correios PAC
+                  Frete Grátis a partir de 3 camisas via Correios PAC
                 </span>
               </div>
 

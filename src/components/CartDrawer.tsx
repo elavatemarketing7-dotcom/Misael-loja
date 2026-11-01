@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Trash2, 
@@ -10,10 +10,14 @@ import {
   Zap, 
   MapPin, 
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Gift,
+  AlertTriangle,
+  Lock
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { getWhatsAppUrl, buildCartWhatsAppMessage } from '../utils/whatsapp';
+import { ShippingAddressInfo } from '../types';
 
 export const CartDrawer: React.FC = () => {
   const {
@@ -38,6 +42,23 @@ export const CartDrawer: React.FC = () => {
   } = useShop();
 
   const [cepInput, setCepInput] = useState(calculatedCep || '');
+  const [streetNumber, setStreetNumber] = useState('');
+  const [streetComplement, setStreetComplement] = useState('');
+  const [streetName, setStreetName] = useState('');
+  const [bairroName, setBairroName] = useState('');
+  const [cityName, setCityName] = useState('');
+  const [ufName, setUfName] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+
+  // Sync address fields when ViaCEP returns address information
+  useEffect(() => {
+    if (shippingAddress) {
+      if (shippingAddress.logradouro) setStreetName(shippingAddress.logradouro);
+      if (shippingAddress.bairro) setBairroName(shippingAddress.bairro);
+      if (shippingAddress.localidade) setCityName(shippingAddress.localidade);
+      if (shippingAddress.uf) setUfName(shippingAddress.uf);
+    }
+  }, [shippingAddress]);
 
   if (!isCartOpen) return null;
 
@@ -48,17 +69,67 @@ export const CartDrawer: React.FC = () => {
       clean = `${clean.slice(0, 5)}-${clean.slice(5)}`;
     }
     setCepInput(clean);
+    setFormError(null);
   };
 
   const handleCalcShipping = (e: React.FormEvent) => {
     e.preventDefault();
     if (cepInput.trim()) {
+      setFormError(null);
       calculateShipping(cepInput);
+    } else {
+      setFormError('Por favor, digite seu CEP para calcular o frete.');
     }
   };
 
+  // Check if shipping calculation/address is ready for WhatsApp checkout
+  const isShippingReady = freeShippingQualified
+    ? Boolean(calculatedCep || (cepInput.replace(/\D/g, '').length === 8))
+    : Boolean(calculatedCep && selectedShippingOption);
+
   const handleWhatsAppCheckout = () => {
-    const message = buildCartWhatsAppMessage(cart, cartTotal, selectedShippingOption, calculatedCep);
+    // 1. Validation for orders with less than 3 shirts: must calculate shipping first
+    if (!freeShippingQualified) {
+      if (!calculatedCep || !selectedShippingOption) {
+        setFormError('⚠️ Por favor, digite seu CEP e calcule o frete dos Correios antes de chamar no WhatsApp.');
+        const el = document.getElementById('cart-cep-input');
+        if (el) el.focus();
+        return;
+      }
+    }
+
+    // 2. Validation for orders with 3+ shirts: must inform CEP for shipping label
+    if (freeShippingQualified) {
+      const cleanCep = (calculatedCep || cepInput).replace(/\D/g, '');
+      if (cleanCep.length !== 8) {
+        setFormError('⚠️ Por favor, informe seu CEP para que possamos enviar com Frete Grátis.');
+        const el = document.getElementById('cart-cep-input');
+        if (el) el.focus();
+        return;
+      }
+    }
+
+    setFormError(null);
+
+    const completeAddress: ShippingAddressInfo = {
+      cep: calculatedCep || cepInput,
+      logradouro: streetName || shippingAddress?.logradouro,
+      numero: streetNumber.trim(),
+      complemento: streetComplement.trim(),
+      bairro: bairroName || shippingAddress?.bairro,
+      localidade: cityName || shippingAddress?.localidade,
+      uf: ufName || shippingAddress?.uf
+    };
+
+    const message = buildCartWhatsAppMessage(
+      cart,
+      cartTotal,
+      selectedShippingOption,
+      calculatedCep || cepInput,
+      shippingDestination,
+      completeAddress
+    );
+
     window.open(getWhatsAppUrl(message), '_blank');
   };
 
@@ -90,54 +161,37 @@ export const CartDrawer: React.FC = () => {
             </button>
           </div>
 
-          {/* 2. Wholesale Notice (Pinned Top) */}
-          <div className="shrink-0 px-4 py-2 bg-emerald-950/40 border-b border-emerald-500/30 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <MessageCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span className="text-xs font-bold text-emerald-300">
-                Acima de 10 peças chamar no WhatsApp
-              </span>
-            </div>
-            <a
-              href={getWhatsAppUrl("Olá MN Store! Gostaria de fazer um pedido acima de 10 peças no atacado.")}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] uppercase tracking-wider transition-colors shrink-0 shadow-sm"
-            >
-              Chamar
-            </a>
-          </div>
-
-          {/* 3. Free Shipping Urgency Bar (Pinned Top) */}
+          {/* 2. Free Shipping Progress Bar (Pinned Top) */}
           <div className="shrink-0 p-3 sm:p-3.5 bg-[#181a24] border-b border-white/10">
             <div className="flex items-center justify-between text-xs mb-1.5">
               <span className="font-semibold text-slate-200 flex items-center gap-1.5 text-[11px] sm:text-xs">
                 <Truck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                 {freeShippingQualified ? (
-                  <span className="text-emerald-400 font-bold">
+                  <span className="text-emerald-400 font-bold flex items-center gap-1">
+                    <Gift className="w-3.5 h-3.5 text-emerald-400" />
                     Parabéns! Você ganhou FRETE GRÁTIS!
                   </span>
                 ) : (
                   <span>
-                    Falta <strong className="text-amber-400">{freeShippingRemaining} camisa</strong> para <strong>FRETE GRÁTIS</strong>
+                    Falta <strong className="text-amber-400">{freeShippingRemaining} {freeShippingRemaining === 1 ? 'camisa' : 'camisas'}</strong> para <strong>FRETE GRÁTIS</strong>
                   </span>
                 )}
               </span>
               <span className="text-slate-400 font-mono text-[10px] sm:text-[11px]">
-                {cartItemCount}/2 mantos
+                {cartItemCount}/3 mantos
               </span>
             </div>
             <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
               <div
                 className={`h-full transition-all duration-500 ${
-                  freeShippingQualified ? 'bg-emerald-500' : 'bg-gold-gradient'
+                  freeShippingQualified ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-gold-gradient'
                 }`}
-                style={{ width: `${Math.min(100, (cartItemCount / 2) * 100)}%` }}
+                style={{ width: `${Math.min(100, (cartItemCount / 3) * 100)}%` }}
               />
             </div>
           </div>
 
-          {/* 4. Scrollable Content Area: Items + Shipping Calculator */}
+          {/* 3. Scrollable Content Area: Items + (Address Form OR Shipping Calculator) */}
           <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-4 overscroll-contain">
             
             {/* Empty State */}
@@ -253,166 +307,313 @@ export const CartDrawer: React.FC = () => {
                   ))}
                 </div>
 
-                {/* Shipping Calculation Box - Perfectly framed and readable */}
-                <div className="rounded-2xl bg-[#161824] border border-amber-500/30 p-3.5 sm:p-4 space-y-3 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <span className="font-black text-xs uppercase tracking-wider text-white flex items-center gap-1.5 font-display">
-                      <Truck className="w-4 h-4 text-amber-400" />
-                      Cálculo de Frete dos Correios
-                    </span>
-                    <span className="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[9px] font-bold uppercase tracking-wider">
-                      PAC & SEDEX
-                    </span>
+                {/* Validation Error Banner */}
+                {formError && (
+                  <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 text-xs flex items-start gap-2 animate-in fade-in">
+                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                    <span>{formError}</span>
                   </div>
+                )}
 
-                  {/* Origin Agency Information */}
-                  <div className="p-2.5 rounded-xl bg-black/50 border border-white/5 space-y-1">
-                    <div className="flex items-center gap-1.5 text-amber-400 font-bold text-[10px] uppercase tracking-wider">
-                      <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span>{originAgency.agencyName}</span>
-                    </div>
-                    <p className="text-slate-300 text-[10px] leading-tight">
-                      {originAgency.fullAddress}
-                    </p>
-                  </div>
-
-                  {/* Destination Info if available */}
-                  {shippingDestination && (
-                    <div className="p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 space-y-0.5">
-                      <div className="flex items-center justify-between text-[10px]">
-                        <span className="font-bold text-emerald-300 uppercase flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-                          Destino Localizado:
-                        </span>
-                        <span className="text-emerald-400 font-mono font-bold">
-                          CEP {calculatedCep.slice(0, 5)}-{calculatedCep.slice(5)}
-                        </span>
+                {/* CONDITIONAL SYSTEM REQUESTED BY USER:
+                    1. If cartItemCount >= 3: Shipping calculation vanishes from screen and ONLY Address form is shown.
+                    2. If cartItemCount < 3: Shows Shipping Calculator and mandates calculation before WhatsApp checkout.
+                */}
+                {freeShippingQualified ? (
+                  /* ========================================================
+                     SCENARIO 1: A PARTIR DE 3 PEÇAS - FRETE SOME E APARECE ENDEREÇO
+                     ======================================================== */
+                  <div className="rounded-2xl bg-gradient-to-b from-[#14231b] via-[#121820] to-[#12141c] border border-emerald-500/40 p-4 space-y-3.5 shadow-xl">
+                    {/* Free shipping celebration badge */}
+                    <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-full bg-emerald-500 text-black flex items-center justify-center shrink-0 font-bold">
+                        <Gift className="w-5 h-5 fill-black" />
                       </div>
-                      <p className="text-white text-xs font-semibold">
-                        {shippingAddress?.logradouro ? `${shippingAddress.logradouro}, ` : ''}{shippingDestination}
-                      </p>
+                      <div>
+                        <span className="font-black text-xs uppercase tracking-wider text-emerald-300 block font-display">
+                          🎉 FRETE 100% GRÁTIS ATIVADO!
+                        </span>
+                        <p className="text-[11px] text-slate-300 leading-tight mt-0.5">
+                          Você escolheu <strong>{cartItemCount} mantos</strong>. O frete dos Correios é gratuito! Preencha apenas seu endereço para envio:
+                        </p>
+                      </div>
                     </div>
-                  )}
 
-                  {/* CEP Form */}
-                  <form onSubmit={handleCalcShipping} className="flex gap-2">
-                    <div className="relative flex-1">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={9}
-                        placeholder="Digite seu CEP (00000-000)"
-                        value={cepInput}
-                        onChange={handleCepChange}
-                        className="w-full px-3 py-2.5 rounded-xl bg-[#0f1015] border border-white/15 text-white placeholder-slate-500 text-xs font-mono focus:outline-none focus:border-amber-400 transition-colors"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={isCalculatingShipping}
-                      className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-md shadow-amber-500/20 active:scale-95 cursor-pointer"
-                    >
-                      {isCalculatingShipping ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span>Calculando</span>
-                        </>
-                      ) : (
-                        'Calcular'
-                      )}
-                    </button>
-                  </form>
-
-                  {/* Correios Options Cards */}
-                  {shippingOptions.length > 0 && (
-                    <div className="space-y-2 pt-1 border-t border-white/10 animate-in fade-in duration-200">
-                      <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">
-                        Selecione a Modalidade dos Correios:
+                    <div className="space-y-2.5">
+                      <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5 font-display">
+                        <MapPin className="w-4 h-4 text-emerald-400" />
+                        Endereço de Recebimento
                       </span>
 
-                      <div className="grid grid-cols-1 gap-2">
-                        {shippingOptions.map((opt) => {
-                          const isSelected = selectedShippingOption?.id === opt.id;
-                          return (
-                            <button
-                              key={opt.id}
-                              type="button"
-                              onClick={() => setSelectedShippingOption(opt)}
-                              className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                                isSelected
-                                  ? 'bg-amber-500/15 border-amber-400 text-white shadow-md shadow-amber-500/10'
-                                  : 'bg-[#10121a] border-white/10 text-slate-300 hover:border-white/30'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5">
-                                <div
-                                  className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                                    isSelected ? 'border-amber-400 bg-amber-400' : 'border-slate-500'
+                      {/* CEP Lookup */}
+                      <form onSubmit={handleCalcShipping} className="flex gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            id="cart-cep-input"
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={9}
+                            placeholder="Seu CEP (00000-000)"
+                            value={cepInput}
+                            onChange={handleCepChange}
+                            className="w-full px-3 py-2.5 rounded-xl bg-[#0f1015] border border-emerald-500/30 text-white placeholder-slate-500 text-xs font-mono focus:outline-none focus:border-emerald-400 transition-colors"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={isCalculatingShipping}
+                          className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-md shadow-emerald-950/30 cursor-pointer"
+                        >
+                          {isCalculatingShipping ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>Buscando...</span>
+                            </>
+                          ) : (
+                            'Buscar Endereço'
+                          )}
+                        </button>
+                      </form>
+
+                      {/* Address Fields: Street, Number, Complement, Neighborhood, City */}
+                      <div className="space-y-2 pt-1 text-xs">
+                        <div>
+                          <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">
+                            Rua / Logradouro:
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Ex: Av. Brasil ou Nome da Rua"
+                            value={streetName}
+                            onChange={(e) => setStreetName(e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl bg-[#0f1015] border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-400"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">
+                              Número <span className="text-amber-400">*</span>:
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Nº da Casa / Apto"
+                              value={streetNumber}
+                              onChange={(e) => setStreetNumber(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl bg-[#0f1015] border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">
+                              Complemento:
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Ex: Bloco B, Apto 42"
+                              value={streetComplement}
+                              onChange={(e) => setStreetComplement(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl bg-[#0f1015] border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-400"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">
+                              Bairro:
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Bairro"
+                              value={bairroName}
+                              onChange={(e) => setBairroName(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl bg-[#0f1015] border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">
+                              Cidade / UF:
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Cidade - UF"
+                              value={cityName && ufName ? `${cityName} - ${ufName}` : cityName || ufName}
+                              onChange={(e) => setCityName(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl bg-[#0f1015] border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-400"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-1 flex items-center gap-1.5 text-[10px] text-slate-400">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>Envio com código de rastreamento oficial dos Correios</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* ========================================================
+                     SCENARIO 2: MENOS DE 3 PEÇAS - CALCULAR FRETE OBRIGATÓRIO
+                     ======================================================== */
+                  <div className="rounded-2xl bg-[#161824] border border-amber-500/40 p-4 space-y-3.5 shadow-xl">
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-xs uppercase tracking-wider text-white flex items-center gap-1.5 font-display">
+                        <Truck className="w-4 h-4 text-amber-400" />
+                        Calcule o Frete para seu Endereço
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[9px] font-bold uppercase tracking-wider">
+                        Obrigatório
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 leading-tight">
+                      💡 <strong>Dica MN Store:</strong> Adicione mais {freeShippingRemaining} {freeShippingRemaining === 1 ? 'manto' : 'mantos'} à sacola e o frete fica <strong>100% GRÁTIS</strong>!
+                    </div>
+
+                    {/* Agency Origin */}
+                    <div className="p-2.5 rounded-xl bg-black/50 border border-white/5 space-y-1">
+                      <div className="flex items-center gap-1.5 text-amber-400 font-bold text-[10px] uppercase tracking-wider">
+                        <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span>Origem do Envio: {originAgency.agencyName}</span>
+                      </div>
+                      <p className="text-slate-300 text-[10px] leading-tight">
+                        {originAgency.fullAddress}
+                      </p>
+                    </div>
+
+                    {/* CEP Form */}
+                    <form onSubmit={handleCalcShipping} className="flex gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          id="cart-cep-input"
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={9}
+                          placeholder="Digite seu CEP (00000-000)"
+                          value={cepInput}
+                          onChange={handleCepChange}
+                          className="w-full px-3 py-2.5 rounded-xl bg-[#0f1015] border border-white/15 text-white placeholder-slate-500 text-xs font-mono focus:outline-none focus:border-amber-400 transition-colors"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={isCalculatingShipping}
+                        className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-md shadow-amber-500/20 active:scale-95 cursor-pointer"
+                      >
+                        {isCalculatingShipping ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Calculando...</span>
+                          </>
+                        ) : (
+                          'Calcular Frete'
+                        )}
+                      </button>
+                    </form>
+
+                    {/* Options list if calculated */}
+                    {shippingOptions.length > 0 && (
+                      <div className="space-y-3 pt-2 border-t border-white/10 animate-in fade-in duration-200">
+                        {/* Located Address */}
+                        <div className="p-2.5 rounded-xl bg-black/40 border border-white/10 text-xs space-y-1.5">
+                          <div className="text-[10px] font-bold text-emerald-400 uppercase flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                            <span>Destino Encontrado: {shippingDestination}</span>
+                          </div>
+                          
+                          {/* Street & Number inputs */}
+                          <div className="grid grid-cols-3 gap-2 pt-1">
+                            <div className="col-span-2">
+                              <input
+                                type="text"
+                                placeholder="Rua / Logradouro"
+                                value={streetName}
+                                onChange={(e) => setStreetName(e.target.value)}
+                                className="w-full px-2.5 py-1.5 rounded-lg bg-[#0d0e14] border border-white/10 text-white text-[11px] focus:outline-none focus:border-amber-400"
+                              />
+                            </div>
+                            <div>
+                              <input
+                                type="text"
+                                placeholder="Nº da Casa"
+                                value={streetNumber}
+                                onChange={(e) => setStreetNumber(e.target.value)}
+                                className="w-full px-2.5 py-1.5 rounded-lg bg-[#0d0e14] border border-white/10 text-white text-[11px] focus:outline-none focus:border-amber-400"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* PAC and SEDEX selection buttons */}
+                        <div className="space-y-1.5">
+                          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">
+                            Escolha a Modalidade dos Correios:
+                          </span>
+
+                          <div className="grid grid-cols-1 gap-2">
+                            {shippingOptions.map((opt) => {
+                              const isSelected = selectedShippingOption?.id === opt.id;
+                              return (
+                                <button
+                                  key={opt.id}
+                                  type="button"
+                                  onClick={() => setSelectedShippingOption(opt)}
+                                  className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-amber-500/15 border-amber-400 text-white shadow-md shadow-amber-500/10'
+                                      : 'bg-[#10121a] border-white/10 text-slate-300 hover:border-white/30'
                                   }`}
                                 >
-                                  {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
-                                </div>
+                                  <div className="flex items-center gap-2.5">
+                                    <div
+                                      className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                        isSelected ? 'border-amber-400 bg-amber-400' : 'border-slate-500'
+                                      }`}
+                                    >
+                                      {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
+                                    </div>
 
-                                <div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="font-bold text-xs uppercase font-display text-white">
-                                      {opt.id === 'sedex' ? 'SEDEX dos Correios' : 'PAC dos Correios'}
-                                    </span>
-                                    {opt.id === 'sedex' ? (
-                                      <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 text-[9px] font-bold uppercase flex items-center gap-0.5">
-                                        <Zap className="w-2.5 h-2.5" /> Expresso
+                                    <div>
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="font-bold text-xs uppercase font-display text-white">
+                                          {opt.id === 'sedex' ? 'SEDEX dos Correios' : 'PAC dos Correios'}
+                                        </span>
+                                        {opt.id === 'sedex' ? (
+                                          <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-400 text-[9px] font-bold uppercase flex items-center gap-0.5">
+                                            <Zap className="w-2.5 h-2.5" /> Expresso
+                                          </span>
+                                        ) : (
+                                          <span className="px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 text-[9px] font-bold uppercase">
+                                            Econômico
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                                        Prazo estimado: <strong className="text-slate-200">{opt.deadline}</strong>
                                       </span>
-                                    ) : (
-                                      <span className="px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 text-[9px] font-bold uppercase">
-                                        Econômico
-                                      </span>
-                                    )}
+                                    </div>
                                   </div>
-                                  <span className="text-[10px] text-slate-400 block mt-0.5">
-                                    Prazo estimado: <strong className="text-slate-200">{opt.deadline}</strong>
-                                  </span>
-                                </div>
-                              </div>
 
-                              <div className="text-right shrink-0">
-                                {opt.price === 0 ? (
-                                  <div>
-                                    {opt.originalPrice && (
-                                      <span className="text-[9px] text-slate-500 line-through block font-mono">
-                                        R$ {opt.originalPrice.toFixed(2)}
-                                      </span>
-                                    )}
-                                    <span className="text-xs font-black text-emerald-400 uppercase font-mono">
-                                      GRÁTIS
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <div>
-                                    {opt.originalPrice && opt.originalPrice > opt.price && (
-                                      <span className="text-[9px] text-slate-500 line-through block font-mono">
-                                        R$ {opt.originalPrice.toFixed(2)}
-                                      </span>
-                                    )}
+                                  <div className="text-right shrink-0">
                                     <span className="text-xs font-bold text-white font-mono">
                                       R$ {opt.price.toFixed(2)}
                                     </span>
                                   </div>
-                                )}
-                              </div>
-                            </button>
-                          );
-                        })}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  )}
-
-                </div>
+                    )}
+                  </div>
+                )}
               </>
             )}
 
           </div>
 
-          {/* 5. Sticky Bottom Summary & WhatsApp Order CTA (Pinned Bottom) */}
+          {/* 4. Sticky Bottom Summary & WhatsApp Order CTA (Pinned Bottom) */}
           {cart.length > 0 && (
             <div className="shrink-0 p-3.5 sm:p-4 border-t border-white/10 bg-[#141620] space-y-2.5 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] shadow-2xl">
               
@@ -433,19 +634,22 @@ export const CartDrawer: React.FC = () => {
                 <div className="flex justify-between text-[11px] items-center">
                   <span className="text-slate-400 flex items-center gap-1">
                     <Truck className="w-3 h-3 text-amber-400" />
-                    Frete {selectedShippingOption ? `(${selectedShippingOption.service})` : 'Correios'}:
+                    Frete dos Correios:
                   </span>
                   <span className="font-mono font-bold">
-                    {selectedShippingOption ? (
-                      selectedShippingOption.price === 0 ? (
-                        <span className="text-emerald-400 uppercase">GRÁTIS</span>
-                      ) : (
-                        <span className="text-white">R$ {selectedShippingOption.price.toFixed(2)}</span>
-                      )
-                    ) : freeShippingQualified ? (
-                      <span className="text-emerald-400 uppercase">GRÁTIS</span>
+                    {freeShippingQualified ? (
+                      <span className="text-emerald-400 font-black uppercase flex items-center gap-1">
+                        <Gift className="w-3 h-3" />
+                        100% GRÁTIS
+                      </span>
+                    ) : selectedShippingOption ? (
+                      <span className="text-white">
+                        {selectedShippingOption.service}: R$ {selectedShippingOption.price.toFixed(2)}
+                      </span>
                     ) : (
-                      <span className="text-amber-400/90 text-[10px]">A calcular via CEP acima</span>
+                      <span className="text-amber-400/90 text-[10px] font-bold">
+                        ⚠️ Calcule acima para liberar
+                      </span>
                     )}
                   </span>
                 </div>
@@ -466,15 +670,29 @@ export const CartDrawer: React.FC = () => {
               </div>
 
               {/* Encomenda Exclusiva pelo WhatsApp CTA */}
-              <button
-                type="button"
-                onClick={handleWhatsAppCheckout}
-                className="w-full py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-950/60 hover:brightness-110 active:scale-98 transition-all cursor-pointer"
-              >
-                <MessageCircle className="w-5 h-5 fill-white text-emerald-700 shrink-0" />
-                <span>Encomendar pelo WhatsApp</span>
-                <ArrowRight className="w-4 h-4 shrink-0" />
-              </button>
+              {isShippingReady ? (
+                /* BUTTON ACTIVE: When shipping is ready */
+                <button
+                  type="button"
+                  onClick={handleWhatsAppCheckout}
+                  className="w-full py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-950/60 hover:brightness-110 active:scale-98 transition-all cursor-pointer"
+                >
+                  <MessageCircle className="w-5 h-5 fill-white text-emerald-700 shrink-0" />
+                  <span>Encomendar pelo WhatsApp</span>
+                  <ArrowRight className="w-4 h-4 shrink-0" />
+                </button>
+              ) : (
+                /* BUTTON LOCKED: Forces user to calculate shipping first */
+                <button
+                  type="button"
+                  onClick={handleWhatsAppCheckout}
+                  className="w-full py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:brightness-105 text-black font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-amber-950/40 active:scale-98 transition-all cursor-pointer"
+                >
+                  <Lock className="w-4 h-4 text-black shrink-0" />
+                  <span>Calcule o Frete para Encomendar</span>
+                  <ArrowRight className="w-4 h-4 shrink-0" />
+                </button>
+              )}
 
               <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 pt-0.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />

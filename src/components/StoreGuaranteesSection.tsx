@@ -65,7 +65,7 @@ export const StoreGuaranteesSection: React.FC = () => {
                 Frete Grátis no Combo
               </h3>
               <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                Adicione 2 ou mais mantos ao seu carrinho e o frete fica 100% gratuito pelos Correios com código de rastreio.
+                Adicione 3 ou mais mantos ao seu carrinho e o frete fica 100% gratuito pelos Correios com código de rastreio.
               </p>
             </div>
 

@@ -361,9 +361,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     0
   );
 
-  // Free shipping rule: 2 or more jerseys = free shipping!
-  const freeShippingQualified = cartItemCount >= 2;
-  const freeShippingRemaining = Math.max(0, 2 - cartItemCount);
+  // Free shipping rule: 3 or more jerseys = free shipping!
+  const freeShippingQualified = cartItemCount >= 3;
+  const freeShippingRemaining = Math.max(0, 3 - cartItemCount);
 
   // Shipping calculation via Correios (PAC and SEDEX)
   const calculateShipping = useCallback(
