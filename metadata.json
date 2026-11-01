@@ -1,6 +1,6 @@
 {
   "name": "MN Store - Camisas de Time",
-  "description": "Loja exclusiva de camisas de time de futebol. De R$ 180 por apenas R$ 120 com personalização e frete para todo Brasil.",
+  "description": "Loja exclusiva de camisas de time de futebol. De R$ 180 por apenas R$ 130 com personalização e frete para todo Brasil.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

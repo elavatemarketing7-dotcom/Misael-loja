@@ -164,6 +164,31 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [shippingAddress, setShippingAddress] = useState<ShippingAddressInfo | null>(null);
   const [isCalculatingShipping, setIsCalculatingShipping] = useState<boolean>(false);
 
+  // Load persisted products from server API on mount
+  useEffect(() => {
+    let isMounted = true;
+    const loadServerProducts = async () => {
+      try {
+        const res = await fetch('/api/products');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.products) && data.products.length > 0) {
+            if (isMounted) {
+              setProducts(data.products);
+              saveProductsToStorage(data.products);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('API /api/products indisponível, usando cache:', err);
+      }
+    };
+    loadServerProducts();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   useEffect(() => {
     saveProductsToStorage(products);
   }, [products]);
@@ -198,7 +223,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     
     setProducts((prev) => {
-      const updated = [newProduct, ...prev];
+      const updated = [newProduct, ...prev.filter((p) => p.id !== newProduct.id)];
       saveProductsToStorage(updated);
       return updated;
     });
@@ -207,6 +232,16 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setActiveCategory('todos');
     setEditingProduct(newProduct);
     showToast(`Manto "${newProduct.team || newProduct.name}" cadastrado e salvo com sucesso!`);
+
+    // Persist permanently on server
+    fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newProduct)
+    }).catch((err) => {
+      console.error('Falha ao salvar produto no servidor:', err);
+    });
+
     return newProduct;
   };
 
@@ -219,6 +254,13 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCart((prev) => prev.filter((item) => item.productId !== id));
     setEditingProduct((curr) => (curr?.id === id ? null : curr));
     showToast('Camisa removida do catálogo com sucesso!');
+
+    // Persist permanently on server
+    fetch(`/api/products/${id}`, {
+      method: 'DELETE'
+    }).catch((err) => {
+      console.error('Falha ao deletar produto no servidor:', err);
+    });
   };
 
   const updateProduct = (id: string, updates: Partial<Product>) => {
@@ -229,12 +271,27 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     setEditingProduct((curr) => (curr?.id === id ? { ...curr, ...updates } : curr));
     showToast('Manto atualizado com sucesso no catálogo!');
+
+    // Persist permanently on server
+    fetch(`/api/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    }).catch((err) => {
+      console.error('Falha ao atualizar produto no servidor:', err);
+    });
   };
 
   const resetProductsToDefault = () => {
     setProducts(INITIAL_PRODUCTS);
     localStorage.removeItem(LOCAL_STORAGE_PRODUCTS_KEY);
     showToast('Catálogo restaurado para as fotos e modelos padrão!');
+
+    fetch('/api/products/reset', {
+      method: 'POST'
+    }).catch(() => {
+      // fallback
+    });
   };
 
   const addToCart = (
