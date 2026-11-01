@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   Gift,
   AlertTriangle,
-  Lock
+  Lock,
+  Home
 } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { getWhatsAppUrl, buildCartWhatsAppMessage } from '../utils/whatsapp';
@@ -82,10 +83,30 @@ export const CartDrawer: React.FC = () => {
     }
   };
 
-  // Check if shipping calculation/address is ready for WhatsApp checkout
+  // Validation checks: house number is strictly mandatory in all cases
+  const hasValidHouseNumber = Boolean(streetNumber.trim());
+  const hasValidCep = Boolean(calculatedCep || (cepInput.replace(/\D/g, '').length === 8));
+  const hasCalculatedShipping = Boolean(calculatedCep && selectedShippingOption);
+
+  // Ready ONLY when house number is filled AND shipping/CEP conditions are met
   const isShippingReady = freeShippingQualified
-    ? Boolean(calculatedCep || (cepInput.replace(/\D/g, '').length === 8))
-    : Boolean(calculatedCep && selectedShippingOption);
+    ? (hasValidCep && hasValidHouseNumber)
+    : (hasCalculatedShipping && hasValidHouseNumber);
+
+  let lockedButtonText = 'Calcule o Frete para Encomendar';
+  if (freeShippingQualified) {
+    if (!hasValidCep) {
+      lockedButtonText = 'Digite seu CEP para Entrega';
+    } else if (!hasValidHouseNumber) {
+      lockedButtonText = 'Digite o Nº da Casa para Liberar';
+    }
+  } else {
+    if (!hasCalculatedShipping) {
+      lockedButtonText = 'Calcule o Frete para Encomendar';
+    } else if (!hasValidHouseNumber) {
+      lockedButtonText = 'Digite o Nº da Casa para Liberar';
+    }
+  }
 
   const handleWhatsAppCheckout = () => {
     // 1. Validation for orders with less than 3 shirts: must calculate shipping first
@@ -107,6 +128,14 @@ export const CartDrawer: React.FC = () => {
         if (el) el.focus();
         return;
       }
+    }
+
+    // 3. MANDATORY: House number is required in both cases to release WhatsApp
+    if (!hasValidHouseNumber) {
+      setFormError('⚠️ Por favor, informe o número da sua casa / residência para liberar o pedido pelo WhatsApp.');
+      const elNum = document.getElementById('cart-street-number-input') || document.getElementById('cart-street-number-input-lt3');
+      if (elNum) elNum.focus();
+      return;
     }
 
     setFormError(null);
@@ -392,15 +421,22 @@ export const CartDrawer: React.FC = () => {
 
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">
-                              Número <span className="text-amber-400">*</span>:
+                            <label className="text-[10px] text-slate-300 uppercase font-bold block mb-1 flex items-center justify-between">
+                              <span>Número <span className="text-amber-400">*</span>:</span>
+                              <span className="text-amber-400 font-bold text-[9px]">Obrigatório</span>
                             </label>
                             <input
+                              id="cart-street-number-input"
                               type="text"
                               placeholder="Nº da Casa / Apto"
                               value={streetNumber}
-                              onChange={(e) => setStreetNumber(e.target.value)}
-                              className="w-full px-3 py-2 rounded-xl bg-[#0f1015] border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-400"
+                              onChange={(e) => {
+                                setStreetNumber(e.target.value);
+                                setFormError(null);
+                              }}
+                              className={`w-full px-3 py-2 rounded-xl bg-[#0f1015] border text-white text-xs font-bold focus:outline-none transition-colors ${
+                                !streetNumber.trim() ? 'border-amber-500/80 ring-1 ring-amber-500/30' : 'border-emerald-500/50'
+                              }`}
                             />
                           </div>
                           <div>
@@ -522,24 +558,39 @@ export const CartDrawer: React.FC = () => {
                           </div>
                           
                           {/* Street & Number inputs */}
-                          <div className="grid grid-cols-3 gap-2 pt-1">
-                            <div className="col-span-2">
-                              <input
-                                type="text"
-                                placeholder="Rua / Logradouro"
-                                value={streetName}
-                                onChange={(e) => setStreetName(e.target.value)}
-                                className="w-full px-2.5 py-1.5 rounded-lg bg-[#0d0e14] border border-white/10 text-white text-[11px] focus:outline-none focus:border-amber-400"
-                              />
-                            </div>
-                            <div>
-                              <input
-                                type="text"
-                                placeholder="Nº da Casa"
-                                value={streetNumber}
-                                onChange={(e) => setStreetNumber(e.target.value)}
-                                className="w-full px-2.5 py-1.5 rounded-lg bg-[#0d0e14] border border-white/10 text-white text-[11px] focus:outline-none focus:border-amber-400"
-                              />
+                          <div className="space-y-1 pt-1">
+                            <div className="grid grid-cols-3 gap-2">
+                              <div className="col-span-2">
+                                <label className="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">
+                                  Rua / Logradouro:
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="Rua / Avenida"
+                                  value={streetName}
+                                  onChange={(e) => setStreetName(e.target.value)}
+                                  className="w-full px-2.5 py-1.5 rounded-lg bg-[#0d0e14] border border-white/10 text-white text-[11px] focus:outline-none focus:border-amber-400"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[10px] text-slate-300 uppercase font-bold block mb-0.5 flex items-center justify-between">
+                                  <span>Nº:</span>
+                                  <span className="text-amber-400 font-black text-[9px]">* Obrigatório</span>
+                                </label>
+                                <input
+                                  id="cart-street-number-input-lt3"
+                                  type="text"
+                                  placeholder="Nº da Casa *"
+                                  value={streetNumber}
+                                  onChange={(e) => {
+                                    setStreetNumber(e.target.value);
+                                    setFormError(null);
+                                  }}
+                                  className={`w-full px-2.5 py-1.5 rounded-lg bg-[#0d0e14] border text-white text-[11px] font-bold focus:outline-none transition-colors ${
+                                    !streetNumber.trim() ? 'border-amber-500/80 ring-1 ring-amber-500/40' : 'border-emerald-500/50'
+                                  }`}
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -654,6 +705,25 @@ export const CartDrawer: React.FC = () => {
                   </span>
                 </div>
 
+                {/* Status do Número da Casa */}
+                <div className="flex justify-between text-[11px] items-center">
+                  <span className="text-slate-400 flex items-center gap-1">
+                    <Home className="w-3 h-3 text-amber-400" />
+                    Número da Residência:
+                  </span>
+                  <span className="font-mono text-[10px]">
+                    {hasValidHouseNumber ? (
+                      <span className="text-emerald-400 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-2.5 h-2.5" /> Nº {streetNumber}
+                      </span>
+                    ) : (
+                      <span className="text-amber-400 font-bold bg-amber-500/15 px-1.5 py-0.5 rounded">
+                        * Falta preencher
+                      </span>
+                    )}
+                  </span>
+                </div>
+
                 <div className="flex justify-between items-baseline pt-1.5 border-t border-white/10 text-white font-bold">
                   <div>
                     <span className="text-sm font-display uppercase tracking-wider block">Total do Pedido</span>
@@ -671,7 +741,7 @@ export const CartDrawer: React.FC = () => {
 
               {/* Encomenda Exclusiva pelo WhatsApp CTA */}
               {isShippingReady ? (
-                /* BUTTON ACTIVE: When shipping is ready */
+                /* BUTTON ACTIVE: When shipping + house number are ready */
                 <button
                   type="button"
                   onClick={handleWhatsAppCheckout}
@@ -682,14 +752,14 @@ export const CartDrawer: React.FC = () => {
                   <ArrowRight className="w-4 h-4 shrink-0" />
                 </button>
               ) : (
-                /* BUTTON LOCKED: Forces user to calculate shipping first */
+                /* BUTTON LOCKED: Forces user to calculate shipping and enter house number */
                 <button
                   type="button"
                   onClick={handleWhatsAppCheckout}
-                  className="w-full py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:brightness-105 text-black font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-amber-950/40 active:scale-98 transition-all cursor-pointer"
+                  className="w-full py-3.5 sm:py-4 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:brightness-105 text-black font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-amber-950/40 active:scale-98 transition-all cursor-pointer"
                 >
                   <Lock className="w-4 h-4 text-black shrink-0" />
-                  <span>Calcule o Frete para Encomendar</span>
+                  <span>{lockedButtonText}</span>
                   <ArrowRight className="w-4 h-4 shrink-0" />
                 </button>
               )}
