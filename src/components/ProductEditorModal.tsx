@@ -76,6 +76,10 @@ export const ProductEditorModal: React.FC = () => {
   const [newFallbackColor, setNewFallbackColor] = useState('#1e202c');
 
   useEffect(() => {
+    if (products.length === 0) {
+      setActiveTab('create');
+      return;
+    }
     const current = editingProduct || products[0];
     if (current) {
       setSelectedId(current.id);

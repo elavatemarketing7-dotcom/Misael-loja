@@ -218,7 +218,46 @@ export const CatalogSection: React.FC = () => {
       </div>
 
       {/* 3. Product Grid: 2 columns on mobile, 4 columns on large */}
-      {filteredProducts.length === 0 ? (
+      {products.length === 0 ? (
+        <div className="py-12 sm:py-16 text-center space-y-5 rounded-2xl bg-gradient-to-b from-[#141622] via-[#10121a] to-[#0c0d12] border border-amber-500/40 p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center mx-auto text-amber-400 shadow-lg shadow-amber-500/20">
+            <Lock className="w-8 h-8 text-amber-400" />
+          </div>
+
+          <div className="space-y-2 max-w-lg mx-auto">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-amber-400 font-mono">
+              Painel mnstore · Editor Principal Ativo
+            </span>
+            <h3 className="text-xl sm:text-2xl font-black text-white font-display uppercase tracking-wider">
+              Nenhuma Camiseta Cadastrada no Momento
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Todas as camisetas de amostra foram retiradas da tela. Utilize o <strong>Painel mnstore</strong> para cadastrar, editar fotos, preços e gerenciar seus mantos. Tudo que você cadastrar permanecerá salvo permanentemente mesmo ao atualizar a página!
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => openProductEditor()}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gold-gradient text-black font-black text-xs uppercase tracking-wider shadow-xl shadow-amber-500/25 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Lock className="w-4 h-4 fill-black text-black" />
+              <span>Abrir Painel MN Store & Cadastrar Camisetas</span>
+            </button>
+
+            <a
+              href={getWhatsAppUrl("Olá MN Store! Gostaria de encomendar um manto específico na promoção de R$ 130.")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-950/40"
+            >
+              <MessageCircle className="w-4 h-4 fill-white text-emerald-800" />
+              <span>Pedir Encomenda no WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      ) : filteredProducts.length === 0 ? (
         <div className="py-12 sm:py-16 text-center space-y-4 rounded-xl sm:rounded-2xl bg-[#14151e] border border-white/10 p-6 sm:p-8">
           <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-amber-400">
             <Filter className="w-7 h-7" />

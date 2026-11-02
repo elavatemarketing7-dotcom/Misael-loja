@@ -1,6 +1,8 @@
 import { Product } from '../types';
 
-export const INITIAL_PRODUCTS: Product[] = [
+export const INITIAL_PRODUCTS: Product[] = [];
+
+export const SAMPLE_JERSEYS_TEMPLATES: Product[] = [
   {
     id: 'mn-rm-home-24',
     name: 'Camisa Real Madrid I 24/25 Home Branca',

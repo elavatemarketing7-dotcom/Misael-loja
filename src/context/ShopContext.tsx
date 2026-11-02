@@ -100,22 +100,16 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [products, setProducts] = useState<Product[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_PRODUCTS_KEY);
-      if (saved) {
+      if (saved !== null) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Automatic migration: update default promotion from 120 to 130
-          return parsed.map((item: Product) => {
-            if (item.promoPrice === 120 && item.originalPrice === 180) {
-              return { ...item, promoPrice: 130 };
-            }
-            return item;
-          });
+        if (Array.isArray(parsed)) {
+          return parsed;
         }
       }
     } catch {
       // fallback
     }
-    return INITIAL_PRODUCTS;
+    return [];
   });
 
   // Cart persistence
@@ -144,7 +138,16 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLojistaModalOpen, setIsLojistaModalOpen] = useState(false);
   const [isLojistaLoginOpen, setIsLojistaLoginOpen] = useState(false);
-  const [isLojistaAuthenticated, setIsLojistaAuthenticated] = useState<boolean>(false);
+  const [isLojistaAuthenticated, setIsLojistaAuthenticated] = useState<boolean>(() => {
+    try {
+      return (
+        localStorage.getItem('mn_lojista_authenticated') === 'true' ||
+        sessionStorage.getItem('mn_lojista_authenticated') === 'true'
+      );
+    } catch {
+      return false;
+    }
+  });
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [selectedProductDetail, setSelectedProductDetail] = useState<Product | null>(null);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
@@ -169,7 +172,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const res = await fetch('/api/products');
         if (res.ok) {
           const data = await res.json();
-          if (data && Array.isArray(data.products) && data.products.length > 0) {
+          if (data && Array.isArray(data.products)) {
             if (isMounted) {
               setProducts(data.products);
               saveProductsToStorage(data.products);
@@ -450,13 +453,14 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (cleanUser === 'mnstore' && cleanPass === 'Misael@123') {
       setIsLojistaAuthenticated(true);
       try {
+        localStorage.setItem('mn_lojista_authenticated', 'true');
         sessionStorage.setItem('mn_lojista_authenticated', 'true');
       } catch {
         // ignore
       }
       setIsLojistaLoginOpen(false);
       setIsLojistaModalOpen(true);
-      showToast('Acesso concedido ao Painel do Lojista!');
+      showToast('Acesso concedido ao Painel MN Store!');
       return { success: true, message: 'Login realizado com sucesso!' };
     }
 
@@ -466,6 +470,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logoutLojista = () => {
     setIsLojistaAuthenticated(false);
     try {
+      localStorage.removeItem('mn_lojista_authenticated');
       sessionStorage.removeItem('mn_lojista_authenticated');
     } catch {
       // ignore
